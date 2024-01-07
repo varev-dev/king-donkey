@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "GameObject.h"
+#include "GameObject.hpp"
 #include "DEFINED_VALUES.h"
 
 extern "C" {
