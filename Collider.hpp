@@ -1,75 +1,74 @@
 #include "Movable.hpp"
+#include "DEFINED_VALUES.h"
 
 class Collider {
 public:
 	static bool CollisionBetweenMovableAndObject(GameObject go, Movable mv) {
-		if (go.getEndAxisY() < mv.getBeginningAxisY())
+		if (!CollisionOnAxisY(go, mv))
 			return false;
 
-		if (go.getBeginningAxisY() > mv.getEndAxisY())
-			return false;
-
-		if (go.getBeginningAxisX() > mv.getCenterOfAxisX())
-			return false;
-
-		if (go.getEndAxisX() < mv.getCenterOfAxisX())
+		if (!CollisionOnAxisX(go, mv))
 			return false;
 
 		return true;
 	}
 
 	static bool IsMovePossibleOnAxisY(GameObject go, Movable mv) {
-		if (go.getBeginningAxisX() > mv.getCenterOfAxisX()) {
-			printf("1\n");
-			return false;
-		}
-
-		if (go.getEndAxisX() < mv.getCenterOfAxisX()) {
-			printf("1\n");
-			return false;
-		}
-
-		if (!CollisionOnAxisY(go, mv)) {
-			return false;
-		}
-
-		return true;
-	}
-
-	static bool IsMovePossibleOnAxisX(GameObject go, Movable mv) {
-		if (go.getBeginningAxisY() != mv.getEndAxisY()) {
-			printf("1\n");
-			return false;
-		}
-
-		if (!CollisionOnAxisX(go, mv)) {
-			printf("2\n");
-			return false;
-		}
-
-		return true;
-	}
-
-private:
-	static bool CollisionOnAxisX(GameObject go, Movable mv) {
 		if (go.getBeginningAxisX() > mv.getCenterOfAxisX())
 			return false;
 
 		if (go.getEndAxisX() < mv.getCenterOfAxisX())
 			return false;
 
+		if (!CollisionOnAxisY(go, mv))
+			return false;
+
+		return true;
+	}
+
+	static bool IsMovePossibleOnAxisX(GameObject go, Movable mv) {
+		if (go.getBeginningAxisY() != mv.getEndAxisY())
+			return false;
+
+		if (!CollisionOnAxisX(go, mv))
+			return false;
+
+		return true;
+	}
+
+	static GameObject* SetCurrentCollider(GameObject *object[MAX_FLOORS], Movable* mv, int mode) {
+		for (int i = 0; i < MAX_FLOORS; i++) {
+			if (object[i] == nullptr)
+				return nullptr;
+
+			if (mode == FLOOR && IsMovePossibleOnAxisX(*object[i], *mv)) {
+				return object[i];
+			}
+
+			if (mode == LADDER && IsMovePossibleOnAxisY(*object[i], *mv)) {
+				return object[i];
+			}
+		}
+	}
+
+private:
+	static bool CollisionOnAxisX(GameObject go, Movable mv) {
+		if (go.getBeginningAxisX() > mv.getBeginningAxisX())
+			return false;
+
+		if (go.getEndAxisX() < mv.getEndAxisX())
+			return false;
+
 		return true;
 	}
 
 	static bool CollisionOnAxisY(GameObject go, Movable mv) {
-		if (go.getEndAxisY() < mv.getBeginningAxisY()) {
-			printf("3\n");
+		if (go.getEndAxisY() < mv.getBeginningAxisY())
 			return false;
-		}
-		if (go.getBeginningAxisY() > mv.getEndAxisY()) {
-			printf("4\n");
+		
+		if (go.getBeginningAxisY() > mv.getEndAxisY())
 			return false;
-		}
+
 		return true;
 	}
 };
