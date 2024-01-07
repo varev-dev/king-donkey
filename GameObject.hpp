@@ -10,13 +10,20 @@ class GameObject {
 protected:
 	SDL_Surface* sprite; // texture
 	char* name; // name, for test purposes
-	int x, y; // position
+	double x, y; // position
 	int width, height; // size
 public:
 	// contructors
-	GameObject() = default;
+	GameObject(SDL_Surface* sprite, char* name, double x, double y) {
+		this->sprite = sprite;
+		this->name = name;
+		this->x = x;
+		this->y = y;
+		this->width = sprite->w;
+		this->height = sprite->h;
+	}
 
-	GameObject(SDL_Surface* sprite, char *name, int x, int y, int width, int heigth) {
+	GameObject(SDL_Surface* sprite, char *name, double x, double y, int width, int heigth) {
 		this->sprite = sprite;
 		this->name = name;
 		this->x = x;
@@ -31,7 +38,7 @@ public:
 		this->height = height;
 	}
 
-	void setPosition(int x, int y) {
+	void setPosition(double x, double y) {
 		if (x < 0 || y < 0 || x + this->width >= SCREEN_WIDTH || y + this->height >= SCREEN_HEIGHT) {
 			printf("ERROR: Trying to set position off screen.\n");
 			return;
@@ -41,7 +48,7 @@ public:
 		this->y = y;
 	}
 
-	void setPositionX(int x) {
+	void setPositionX(double x) {
 		if (x < 0 || x + this->width >= SCREEN_WIDTH) {
 			printf("ERROR: Trying to set position X off screen.\n");
 			return;
@@ -50,7 +57,7 @@ public:
 		this->x = x;
 	}
 
-	void setPositionY(int y) {
+	void setPositionY(double y) {
 		if (y < 0 || y + this->height >= SCREEN_HEIGHT) {
 			printf("ERROR: Trying to set position Y off screen.\n");
 			return;
@@ -86,27 +93,27 @@ public:
 		return this->width;
 	}
 
-	int getBeginningAxisX() {
+	double getBeginningAxisX() {
 		return this->x;
 	}
 
-	int getEndAxisX() {
+	double getEndAxisX() {
 		return this->x + this->width;
 	}
 
-	int getBeginningAxisY() {
+	double getBeginningAxisY() {
 		return this->y;
 	}
 
-	int getEndAxisY() {
+	double getEndAxisY() {
 		return this->y + this->height;
 	}
 
-	int getCenterOfAxisX() {
+	double getCenterOfAxisX() {
 		return (this->x + this->x + width) / 2;
 	}
 
-	int getCenterOfAxisY() {
+	double getCenterOfAxisY() {
 		return (this->y + this->y + height) / 2;
 	}
 
@@ -114,7 +121,7 @@ public:
 	void printObject() {
 		printf("\"%s\" ", name);
 		printf("w: %d h: %d, ", width, height);
-		printf("pos: (%d, %d), ", x, y);
+		printf("pos: (%f, %f), ", x, y);
 		printf("sprite - w: %d h: %d\n", sprite->w, sprite->h);
 	}
 
