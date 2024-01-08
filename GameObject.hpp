@@ -32,6 +32,10 @@ public:
 		this->height = heigth;
 	}
 
+	~GameObject() {
+		sprite = nullptr;
+	}
+
 	// setters
 	void setSize(int width, int height) {
 		this->width = width;

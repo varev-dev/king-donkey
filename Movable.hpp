@@ -13,39 +13,60 @@ extern "C" {
 
 #define LEFT 0
 #define RIGHT 1
-
-#define TOP 2
-#define BOTTOM 3
+#define UP 2
+#define DOWN 3
 
 class Movable : public GameObject {
 using GameObject::GameObject;
 public:
-	void move(int direction, double distance, GameObject block) {
+	void setFloor(GameObject *floor) {
+		this->floor = floor;
+	}
+
+	void setLadder(GameObject *ladder) {
+		this->ladder = ladder;
+	}
+
+	GameObject *getFloor() {
+		return this->floor;
+	}
+
+	GameObject* getLadder() {
+		return this->ladder;
+	}
+
+	void move(int direction, double distance) {
 		switch (direction) {
 			case SDLK_LEFT:
-				if (block.getBeginningAxisX() > (int)(this->getBeginningAxisX() - distance))
-					this->setPositionX(block.getBeginningAxisX());
+			case LEFT:
+				if (floor->getBeginningAxisX() > (int)(this->getBeginningAxisX() - distance))
+					this->setPositionX(floor->getBeginningAxisX());
 				else
 					this->setPositionX(this->getBeginningAxisX() - distance);
 				break;
 			case SDLK_RIGHT:
-				if (block.getEndAxisX() < this->getEndAxisX() + distance)
-					this->setPositionX(block.getEndAxisX() - this->width);
+			case RIGHT:
+				if (floor->getEndAxisX() < this->getEndAxisX() + distance)
+					this->setPositionX(floor->getEndAxisX() - this->width);
 				else
 					this->setPositionX(this->getBeginningAxisX() + distance);
 				break;
 			case SDLK_UP:
-				if (this->getBeginningAxisY() - distance > block.getBeginningAxisY() - this->height)
+			case UP:
+				if (this->getBeginningAxisY() - distance > ladder->getBeginningAxisY() - this->height)
 					this->setPositionY(this->getBeginningAxisY() - distance);
 				else
-					this->setPositionY(block.getBeginningAxisY() - this->height);
+					this->setPositionY(ladder->getBeginningAxisY() - this->height);
 				break;
 			case SDLK_DOWN:
-				if (this->getEndAxisY() + distance < block.getEndAxisY())
+			case DOWN:
+				if (this->getEndAxisY() + distance < ladder->getEndAxisY())
 					this->setPositionY(this->getBeginningAxisY() + distance);
 				else
-					this->setPositionY(block.getEndAxisY() - this->height);
+					this->setPositionY(ladder->getEndAxisY() - this->height);
 				break;
 		}
 	}
+private:
+	GameObject *floor, *ladder;
 };
