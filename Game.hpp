@@ -4,11 +4,7 @@
 #include "SDL_Utils.hpp"
 #include "DEFINED_VALUES.h"
 
-#define BORDER_SIZE 16
-#define INFO_BAR_SIZE 48
-#define FLOOR_HEIGHT 96
-
-#define MOVE_SPEED 500.0
+#define MOVE_SPEED 300.0
 
 #define SECOND_TO_MS 1000.0
 #define REFRESH_PER_SECOND 2.0
@@ -27,6 +23,8 @@ public:
 		platform = SDL_LoadBMP("./bmp/platform16x16.bmp");
 		ladder = SDL_LoadBMP("./bmp/ladder16x16.bmp");
 		character = SDL_LoadBMP("./bmp/player32x48.bmp");
+		sand = SDL_LoadBMP("./bmp/sand16x16.bmp");
+		wood = SDL_LoadBMP("./bmp/wood16x16.bmp");
 
 		black = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
 		green = SDL_MapRGB(screen->format, 0x00, 0xFF, 0x00);
@@ -60,7 +58,7 @@ public:
 		delete(player);
 	}
 
-	bool gameInit() {
+	bool init() {
 		return validateSetup();
 	}
 
@@ -87,7 +85,7 @@ public:
 
 private:
 	// SDL types
-	SDL_Surface *screen, *charset, *platform, *ladder, *character;
+	SDL_Surface *screen, *charset, *platform, *ladder, *character, *sand, *wood;
 	SDL_Texture *scrtex;
 	SDL_Renderer *renderer;
 
@@ -189,14 +187,15 @@ private:
 		case SDL_KEYDOWN:
 			if (event.key.keysym.sym == SDLK_ESCAPE) {
 				quit = 1;
-			}
-			else if (event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN) {
+			} else if (event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN) {
 				if (player->getLadder() != nullptr && Collider::IsMovePossibleOnAxisY(*player->getLadder(), *player))
-					player->move(event.key.keysym.sym, distance);
-			}
-			else if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT) {
+					player->move(event.key.keysym.sym, distance / 2);
+			} else if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT) {
 				if (Collider::IsMovePossibleOnAxisX(*player->getFloor(), *player))
 					player->move(event.key.keysym.sym, distance);
+			} else if (event.key.keysym.sym == SDLK_n) {
+				startSetup();
+				levelSetup();
 			}
 			break;
 		case SDL_QUIT:
@@ -206,22 +205,58 @@ private:
 	}
 
 	void levelSetup() {
-		int end = SCREEN_HEIGHT - BORDER_SIZE;
-
 		player = new Movable(character, "Player", 
-				(SCREEN_WIDTH - character->w) / 2, end - character->h - platform->h);
-		floors[0] = new GameObject(platform, "Main Floor",
-			BORDER_SIZE, end - platform->h, width, platform->h);
-		ladders[0] = new GameObject(ladder, "Ladder 1", 
-			BORDER_SIZE + 48, end - platform->h - FLOOR_HEIGHT, ladder->w, FLOOR_HEIGHT);
+				(SCREEN_WIDTH - character->w) / 2, GAME_END_Y - character->h - platform->h);
+		floors[0] = new GameObject(sand, "Main Floor",
+			BORDER_SIZE, GAME_END_Y - platform->h, 
+			SCREEN_WIDTH, platform->h);
 		
-		floors[1] = new GameObject(platform, "Floor 1",
-			BORDER_SIZE + 32, end - platform->h - FLOOR_HEIGHT, width / 2, platform->h);
-		//ladders[1] = new GameObject(ladder, "Ladder 1",
-			//BORDER_SIZE + 32, end - platform->h - FLOOR_HEIGHT, ladder->w, FLOOR_HEIGHT);
+		floors[1] = new GameObject(wood, "Floor 1",
+			GAME_BEG_X + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT, 
+			128, platform->h);
 
-		ladders[1] = nullptr;
-		floors[2] = nullptr;
+		floors[2] = new GameObject(wood, "Floor 2",
+			floors[1]->getEndAxisX() + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT,
+			128, platform->h);
+
+		floors[3] = new GameObject(wood, "Floor 3",
+			floors[2]->getEndAxisX() + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT,
+			128, platform->h);
+
+		floors[4] = new GameObject(wood, "Floor 4",
+			floors[1]->getBeginningAxisX() + 64, GAME_END_Y - platform->h - 2 * FLOOR_HEIGHT,
+			128*3/2, platform->h);
+
+		floors[5] = new GameObject(wood, "Floor 5",
+			floors[1]->getEndAxisX() + 48, GAME_END_Y - platform->h - 3 * FLOOR_HEIGHT,
+			128 * 2, platform->h);
+
+		ladders[0] = new GameObject(ladder, "Ladder 1",
+			floors[1]->getBeginningAxisX() + 32, GAME_END_Y - platform->h - FLOOR_HEIGHT,
+			ladder->w, FLOOR_HEIGHT);
+
+		ladders[1] = new GameObject(ladder, "Ladder 2",
+			floors[2]->getBeginningAxisX() + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT,
+			ladder->w, FLOOR_HEIGHT);
+
+		ladders[2] = new GameObject(ladder, "Ladder 3",
+			floors[3]->getBeginningAxisX() + 64, floors[3]->getBeginningAxisY(),
+			ladder->w, FLOOR_HEIGHT);
+
+		ladders[3] = new GameObject(ladder, "Ladder 4",
+			floors[3]->getBeginningAxisX() + 16, floors[5]->getBeginningAxisY(),
+			ladder->w, FLOOR_HEIGHT * 2);
+
+		ladders[4] = new GameObject(ladder, "Ladder 5",
+			floors[5]->getBeginningAxisX() + 32, floors[5]->getBeginningAxisY(),
+			ladder->w, FLOOR_HEIGHT);
+
+		ladders[5] = new GameObject(ladder, "Ladder 6",
+			floors[1]->getEndAxisX() - 32, floors[1]->getBeginningAxisY() - FLOOR_HEIGHT,
+			ladder->w, FLOOR_HEIGHT);
+
+		ladders[6] = nullptr;
+		floors[6] = nullptr;
 	}
 
 	void printBorder() {
@@ -251,12 +286,11 @@ private:
 	}
 
 	void setCurrentColliders() {
-		player->setFloor(Collider::SetCurrentCollider(floors, player, FLOOR));
+		player->setFloor(Collider::GetCollider(floors, player, FLOOR));
 		
 		if (player->getFloor() == nullptr)
 			player->setFloor(floors[0]);
 
-		player->setLadder(Collider::SetCurrentCollider(ladders, player, LADDER));
+		player->setLadder(Collider::GetCollider(ladders, player, LADDER));
 	}
-
 };

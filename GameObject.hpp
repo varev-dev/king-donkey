@@ -18,8 +18,7 @@ public:
 	GameObject(SDL_Surface* sprite, char* name, double x, double y) {
 		this->sprite = sprite;
 		this->name = name;
-		this->x = x;
-		this->y = y;
+		setPosition(x,y);
 		this->width = sprite->w;
 		this->height = sprite->h;
 	}

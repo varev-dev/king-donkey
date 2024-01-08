@@ -32,22 +32,24 @@ int main(int argc, char **argv) {
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 
-	if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+	// Validate SDL init
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		printf("SDL_Init error: %s\n", SDL_GetError());
 		return 1;
 	}
 
-	// tryb pe³noekranowy / fullscreen mode
-	//rc = SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &window, &renderer);
-	rc = SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer);
+	// Set up window & renderer
+	rc = SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &window, &renderer);
+	//rc = SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer);
 
-	if(rc != 0) {
+	if (rc != 0) {
 		SDL_Quit();
 		printf("SDL_CreateWindowAndRenderer error: %s\n", SDL_GetError());
 		return 1;
 	};
 	
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+	
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
 	SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
@@ -63,15 +65,17 @@ int main(int argc, char **argv) {
 	SDL_ShowCursor(SDL_DISABLE);
 
 	Game *game = new Game(screen, scrtex, renderer);
-	if (game->gameInit())
+	// validate game init
+	if (game->init())
 		game->start();
-	delete(game);
 
 //		if (!Collider::CollisionBetweenMovableAndObject(*floor, *player) &&
 //			!Collider::CollisionBetweenMovableAndObject(*ladder, *player)) {
 //			player->move(SDLK_DOWN, 2, *ladder);
 //		}
-// 
+
+	// free memory
+	delete(game);
 	clearAll(screen, scrtex, window, renderer);
 	return 0;
 };
