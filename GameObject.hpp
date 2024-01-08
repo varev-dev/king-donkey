@@ -12,6 +12,7 @@ protected:
 	char* name; // name, for test purposes
 	double x, y; // position
 	int width, height; // size
+
 public:
 	// contructors
 	GameObject(SDL_Surface* sprite, char* name, double x, double y) {
@@ -43,17 +44,12 @@ public:
 	}
 
 	void setPosition(double x, double y) {
-		if (x < 0 || y < 0 || x + this->width >= SCREEN_WIDTH || y + this->height >= SCREEN_HEIGHT) {
-			printf("ERROR: Trying to set position off screen.\n");
-			return;
-		}
-
-		this->x = x;
-		this->y = y;
+		setPositionX(x);
+		setPositionY(y);
 	}
 
 	void setPositionX(double x) {
-		if (x < 0 || x + this->width >= SCREEN_WIDTH) {
+		if (x < GAME_BEG_X || x + this->width >= GAME_END_X) {
 			printf("ERROR: Trying to set position X off screen.\n");
 			return;
 		}
@@ -62,7 +58,7 @@ public:
 	}
 
 	void setPositionY(double y) {
-		if (y < 0 || y + this->height >= SCREEN_HEIGHT) {
+		if (y < GAME_BEG_Y || y + this->height >= GAME_END_Y) {
 			printf("ERROR: Trying to set position Y off screen.\n");
 			return;
 		}
