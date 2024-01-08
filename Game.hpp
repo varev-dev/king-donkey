@@ -34,33 +34,39 @@ public:
 		blue = SDL_MapRGB(screen->format, 0x11, 0x11, 0xCC);
 		currentLadder = nullptr;
 		currentFloor = nullptr;
+
+		startSetup();
 	}
 
 	~Game() {
 		currentLadder = nullptr;
 		currentFloor = nullptr;
-		delete(charset);
-		delete(platform);
-		delete(ladder);
-		delete(character);
+		
+		for (int i = 0; i < MAX_FLOORS; i++) {
+			if (floors[i] == nullptr)
+				break;
+
+			delete(floors[i]);
+		}
+
+		for (int i = 0; i < MAX_LADDERS; i++) {
+			if (ladders[i] == nullptr)
+				break;
+
+			delete(ladders[i]);
+		}
+
+		SDL_RenderClear(renderer);
 		delete(player);
-		delete(floors);
-		delete(ladders);
 	}
 
 	bool gameInit() {
-		startSetup();
 		return validateSetup();
 	}
 
 	void start() {
 		SDL_Event event;
 		levelSetup();
-
-		/*player->printObject();
-		floors[0]->printObject();
-		floors[1]->printObject();
-		ladders[0]->printObject();*/
 
 		while (!quit) {
 			workWithDelta();
@@ -185,12 +191,12 @@ private:
 				quit = 1;
 			}
 			else if (event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN) {
-				if (currentLadder != nullptr && Collider::IsMovePossibleOnAxisY(*currentLadder, *player))
-					player->move(event.key.keysym.sym, distance, *currentLadder);
+				if (player->getLadder() != nullptr && Collider::IsMovePossibleOnAxisY(*player->getLadder(), *player))
+					player->move(event.key.keysym.sym, distance);
 			}
 			else if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT) {
-				if (Collider::IsMovePossibleOnAxisX(*currentFloor, *player))
-					player->move(event.key.keysym.sym, distance, *currentFloor);
+				if (Collider::IsMovePossibleOnAxisX(*player->getFloor(), *player))
+					player->move(event.key.keysym.sym, distance);
 			}
 			break;
 		case SDL_QUIT:
@@ -203,8 +209,7 @@ private:
 		int end = SCREEN_HEIGHT - BORDER_SIZE;
 
 		player = new Movable(character, "Player", 
-				/*(SCREEN_WIDTH - character->w) / 2, end - character->h - platform->h*/
-				BORDER_SIZE + 32, end - platform->h - FLOOR_HEIGHT - character->h);
+				(SCREEN_WIDTH - character->w) / 2, end - character->h - platform->h);
 		floors[0] = new GameObject(platform, "Main Floor",
 			BORDER_SIZE, end - platform->h, width, platform->h);
 		ladders[0] = new GameObject(ladder, "Ladder 1", 
@@ -246,11 +251,12 @@ private:
 	}
 
 	void setCurrentColliders() {
-		currentFloor = Collider::SetCurrentCollider(floors, player, FLOOR);
+		player->setFloor(Collider::SetCurrentCollider(floors, player, FLOOR));
 		
-		if (currentFloor == nullptr)
-			currentFloor = floors[0];
+		if (player->getFloor() == nullptr)
+			player->setFloor(floors[0]);
 
-		currentLadder = Collider::SetCurrentCollider(ladders, player, LADDER);
+		player->setLadder(Collider::SetCurrentCollider(ladders, player, LADDER));
 	}
+
 };
