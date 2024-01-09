@@ -9,27 +9,23 @@ extern "C" {
 class GameObject {
 protected:
 	SDL_Surface* sprite; // texture
-	char* name; // name, for test purposes
 	double x, y; // position
 	int width, height; // size
 
 public:
 	// contructors
-	GameObject(SDL_Surface* sprite, char* name, double x, double y) {
+	GameObject(SDL_Surface* sprite, double x, double y) {
 		this->sprite = sprite;
-		this->name = name;
 		setPosition(x,y);
 		this->width = sprite->w;
 		this->height = sprite->h;
 	}
 
-	GameObject(SDL_Surface* sprite, char *name, double x, double y, int width, int heigth) {
+	GameObject(SDL_Surface* sprite, double x, double y, int width, int height) {
 		this->sprite = sprite;
-		this->name = name;
-		this->x = x;
-		this->y = y;
+		setPosition(x, y);
 		this->width = width;
-		this->height = heigth;
+		this->height = height;
 	}
 
 	~GameObject() {
@@ -79,10 +75,6 @@ public:
 		this->sprite = sprite;
 	}
 
-	void setName(char* name) {
-		this->name = name;
-	}
-
 	// getters
 	int getHeight() {
 		return this->height;
@@ -118,7 +110,6 @@ public:
 
 	// prints
 	void printObject() {
-		printf("\"%s\" ", name);
 		printf("w: %d h: %d, ", width, height);
 		printf("pos: (%f, %f), ", x, y);
 		printf("sprite - w: %d h: %d\n", sprite->w, sprite->h);

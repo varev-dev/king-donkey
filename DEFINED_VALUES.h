@@ -17,6 +17,17 @@
 #define MAX_LADDERS 8
 #define MAX_FLOORS 8
 
+#define HIGHEST_FLOOR floor((GAME_END_Y - GAME_BEG_Y * 1.0) / (FLOOR_HEIGHT))
+
 // values used as parameter to switch between modes
 #define FLOOR 1
 #define LADDER 2
+
+#define LEFT 0
+#define RIGHT 1
+#define UP 2
+#define DOWN 3
+#define JUMP 4
+
+#define X_AXIS 0
+#define Y_AXIS 1
