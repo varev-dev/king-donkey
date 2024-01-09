@@ -1,5 +1,4 @@
 #define _USE_MATH_DEFINES
-#include<math.h>
 #include<stdio.h>
 #include<string.h>
 
@@ -9,7 +8,6 @@ extern "C" {
 }
 
 #include "DEFINED_VALUES.h"
-
 #include "Game.hpp";
 
 // main
@@ -39,8 +37,8 @@ int main(int argc, char **argv) {
 	}
 
 	// Set up window & renderer
-	rc = SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &window, &renderer);
-	//rc = SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer);
+	//rc = SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &window, &renderer);
+	rc = SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer);
 
 	if (rc != 0) {
 		SDL_Quit();
@@ -48,8 +46,7 @@ int main(int argc, char **argv) {
 		return 1;
 	};
 	
-	
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best");
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 	SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 

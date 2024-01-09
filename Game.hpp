@@ -4,7 +4,9 @@
 #include "SDL_Utils.hpp"
 #include "DEFINED_VALUES.h"
 
-#define MOVE_SPEED 300.0
+#define MOVE_SPEED 200.0
+#define CLIMB_SPEED 150.0
+#define JUMP_SPEED 200.0
 
 #define SECOND_TO_MS 1000.0
 #define REFRESH_PER_SECOND 2.0
@@ -65,6 +67,8 @@ public:
 	void start() {
 		SDL_Event event;
 		levelSetup();
+		player->setState(DEFAULT_STATE);
+		printf("%f", HIGHEST_FLOOR);
 
 		while (!quit) {
 			workWithDelta();
@@ -78,6 +82,7 @@ public:
 
 			SDL_PollEvent(&event);
 			handleEvents(event);
+			movement();
 
 			frames++;
 		}
@@ -165,14 +170,14 @@ private:
 				break;
 			go->printOnScreen(screen);
 		}
-		
+
+		player->printOnScreen(screen);
+
 		for (GameObject* go : floors) {
 			if (go == nullptr)
 				break;
 			go->printOnScreen(screen);
 		}
-
-		player->printOnScreen(screen);
 	}
 	
 	void sdl_refresh() {
@@ -187,16 +192,23 @@ private:
 		case SDL_KEYDOWN:
 			if (event.key.keysym.sym == SDLK_ESCAPE) {
 				quit = 1;
-			} else if (event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN) {
-				if (player->getLadder() != nullptr && Collider::IsMovePossibleOnAxisY(*player->getLadder(), *player))
-					player->move(event.key.keysym.sym, distance / 2);
-			} else if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT) {
-				if (Collider::IsMovePossibleOnAxisX(*player->getFloor(), *player))
-					player->move(event.key.keysym.sym, distance);
-			} else if (event.key.keysym.sym == SDLK_n) {
-				startSetup();
-				levelSetup();
 			}
+			else if ((event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN ||
+					event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT) && 
+					player->getState() == DEFAULT_STATE) {
+				player->setDirection(event.key.keysym.sym, PRESSED);
+			} else if (event.key.keysym.sym == SDLK_SPACE && player->getState() == DEFAULT_STATE) {
+				player->setState(JUMP_STATE);
+			} else if (event.key.keysym.sym == SDLK_n) {
+				levelSetup();
+				gameTime = 0;
+			}
+			break;
+		case SDL_KEYUP:
+			if ((event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN ||
+					event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT) &&
+					player->getState() == DEFAULT_STATE)
+				player->setDirection(event.key.keysym.sym, RELEASED);
 			break;
 		case SDL_QUIT:
 			quit = 1;
@@ -204,54 +216,70 @@ private:
 		}
 	}
 
+	void movement() {
+		if (player->getState() == DEFAULT_STATE) {
+			// CLIMB LADDER
+			if (player->getLadder() != nullptr && Collider::IsMovePossibleOnAxisY(*player->getLadder(), *player))
+				player->move(player->getDirection(Y_AXIS), delta * CLIMB_SPEED);
+			// WALK
+			if (Collider::IsMovePossibleOnAxisX(*player->getFloor(), *player))
+				player->move(player->getDirection(X_AXIS), delta * MOVE_SPEED);
+		} else if (player->getState() == JUMP_STATE && player->getDirection(Y_AXIS) == -1) {
+			// JUMP
+			player->jump(player->getDirection(X_AXIS), delta * JUMP_SPEED, player->getJumpPosition());
+		} else if (player->getState() == FALL_STATE) {
+
+		}
+	}
+
 	void levelSetup() {
-		player = new Movable(character, "Player", 
+		player = new Movable(character, 
 				(SCREEN_WIDTH - character->w) / 2, GAME_END_Y - character->h - platform->h);
-		floors[0] = new GameObject(sand, "Main Floor",
+		floors[0] = new GameObject(sand,
 			BORDER_SIZE, GAME_END_Y - platform->h, 
 			SCREEN_WIDTH, platform->h);
 		
-		floors[1] = new GameObject(wood, "Floor 1",
+		floors[1] = new GameObject(wood,
 			GAME_BEG_X + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT, 
 			128, platform->h);
 
-		floors[2] = new GameObject(wood, "Floor 2",
+		floors[2] = new GameObject(wood,
 			floors[1]->getEndAxisX() + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT,
 			128, platform->h);
 
-		floors[3] = new GameObject(wood, "Floor 3",
+		floors[3] = new GameObject(wood,
 			floors[2]->getEndAxisX() + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT,
 			128, platform->h);
 
-		floors[4] = new GameObject(wood, "Floor 4",
+		floors[4] = new GameObject(wood,
 			floors[1]->getBeginningAxisX() + 64, GAME_END_Y - platform->h - 2 * FLOOR_HEIGHT,
 			128*3/2, platform->h);
 
-		floors[5] = new GameObject(wood, "Floor 5",
+		floors[5] = new GameObject(wood,
 			floors[1]->getEndAxisX() + 48, GAME_END_Y - platform->h - 3 * FLOOR_HEIGHT,
 			128 * 2, platform->h);
 
-		ladders[0] = new GameObject(ladder, "Ladder 1",
+		ladders[0] = new GameObject(ladder,
 			floors[1]->getBeginningAxisX() + 32, GAME_END_Y - platform->h - FLOOR_HEIGHT,
 			ladder->w, FLOOR_HEIGHT);
 
-		ladders[1] = new GameObject(ladder, "Ladder 2",
+		ladders[1] = new GameObject(ladder,
 			floors[2]->getBeginningAxisX() + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT,
 			ladder->w, FLOOR_HEIGHT);
 
-		ladders[2] = new GameObject(ladder, "Ladder 3",
+		ladders[2] = new GameObject(ladder,
 			floors[3]->getBeginningAxisX() + 64, floors[3]->getBeginningAxisY(),
 			ladder->w, FLOOR_HEIGHT);
 
-		ladders[3] = new GameObject(ladder, "Ladder 4",
+		ladders[3] = new GameObject(ladder,
 			floors[3]->getBeginningAxisX() + 16, floors[5]->getBeginningAxisY(),
 			ladder->w, FLOOR_HEIGHT * 2);
 
-		ladders[4] = new GameObject(ladder, "Ladder 5",
+		ladders[4] = new GameObject(ladder,
 			floors[5]->getBeginningAxisX() + 32, floors[5]->getBeginningAxisY(),
 			ladder->w, FLOOR_HEIGHT);
 
-		ladders[5] = new GameObject(ladder, "Ladder 6",
+		ladders[5] = new GameObject(ladder,
 			floors[1]->getEndAxisX() - 32, floors[1]->getBeginningAxisY() - FLOOR_HEIGHT,
 			ladder->w, FLOOR_HEIGHT);
 
