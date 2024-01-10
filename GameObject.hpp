@@ -11,6 +11,7 @@ protected:
 	SDL_Surface* sprite; // texture
 	double x, y; // position
 	int width, height; // size
+	GameObject() = default;
 
 public:
 	// contructors
@@ -43,22 +44,24 @@ public:
 		setPositionY(y);
 	}
 
-	void setPositionX(double x) {
+	bool setPositionX(double x) {
 		if (x < GAME_BEG_X || x + this->width >= GAME_END_X) {
 			printf("ERROR: Trying to set position X off screen.\n");
-			return;
+			return false;
 		}
 
 		this->x = x;
+		return true;
 	}
 
-	void setPositionY(double y) {
+	bool setPositionY(double y) {
 		if (y < GAME_BEG_Y || y + this->height >= GAME_END_Y) {
 			printf("ERROR: Trying to set position Y off screen.\n");
-			return;
+			return false;
 		}
 
 		this->y = y;
+		return true;
 	}
 
 	void setSprite(SDL_Surface* sprite) {
