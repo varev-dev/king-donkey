@@ -14,8 +14,8 @@
 #define GAME_END_Y SCREEN_HEIGHT - BORDER_SIZE
 
 // 
-#define MAX_LADDERS 8
-#define MAX_FLOORS 8
+#define MAX_LADDERS 7
+#define MAX_FLOORS 7
 
 #define HIGHEST_FLOOR floor((GAME_END_Y - GAME_BEG_Y * 1.0) / (FLOOR_HEIGHT))
 

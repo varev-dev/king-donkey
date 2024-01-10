@@ -9,7 +9,7 @@ extern "C" {
 	#include"./SDL2-2.0.10/include/SDL_main.h"
 }
 
-#define JUMP_WIDTH 128
+#define JUMP_WIDTH 96
 #define JUMP_HEIGHT 48
 
 #define PRESSED 1
@@ -23,6 +23,22 @@ class Movable : public GameObject {
 	using GameObject::GameObject;
 
 public:
+	Movable(SDL_Surface* sprite, double x, double y) {
+		this->sprite = sprite;
+		setPosition(x, y);
+		this->width = sprite->w;
+		this->height = sprite->h;
+
+		// default state
+		direction[X_AXIS] = -1;
+		direction[Y_AXIS] = -1;
+		state = DEFAULT_STATE;
+		floor = nullptr;
+		ladder = nullptr;
+		jumpPosition[X_AXIS] = GAME_BEG_X;
+		jumpPosition[Y_AXIS] = GAME_BEG_Y;
+	}
+
 	void setFloor(GameObject *floor) {
 		this->floor = floor;
 	}
@@ -42,16 +58,16 @@ public:
 	void move(int direction, double distance) {
 		switch (direction) {
 			case LEFT:
-				if (floor->getBeginningAxisX() > (int)(this->getBeginningAxisX() - distance))
-					this->setPositionX(floor->getBeginningAxisX());
-				else
-					this->setPositionX(this->getBeginningAxisX() - distance);
+				if (floor->getBeginningAxisX() > (int)(this->getEndAxisX() - distance))
+					setState(FALL_STATE);
+
+				this->setPositionX(this->getBeginningAxisX() - distance);
 				break;
 			case RIGHT:
-				if (floor->getEndAxisX() < this->getEndAxisX() + distance)
-					this->setPositionX(floor->getEndAxisX() - this->width);
-				else
-					this->setPositionX(this->getBeginningAxisX() + distance);
+				if (floor->getEndAxisX() < this->getBeginningAxisX() + distance)
+					setState(FALL_STATE);
+
+				this->setPositionX(this->getBeginningAxisX() + distance);
 				break;
 			case UP:
 				if (this->getBeginningAxisY() - distance > ladder->getBeginningAxisY() - this->height) {
@@ -71,38 +87,49 @@ public:
 	}
 
 	// TO-DO
-	void jump(int direction, double distance, double startPosition[2]) {
+	void jump(double distance, double startPosition[2]) {
 		double y1 = this->getEndAxisY() - startPosition[Y_AXIS] + this->height,
 			x1 = this->getBeginningAxisX() - startPosition[X_AXIS];
 
 		if (x1 < 0)
 			x1 *= -1;
 
-		printf("%f %f\t", startPosition[X_AXIS], startPosition[Y_AXIS]);
+		double newX = this->getBeginningAxisX(), newY;
 
-		double newX = this->getBeginningAxisX();
-
-		if (direction == LEFT)
+		if (jumpDirection == LEFT)
 			newX -= distance;
-		if (direction == RIGHT)
+		if (jumpDirection == RIGHT)
 			newX += distance;
 
-		double argument = x1 * M_PI / JUMP_WIDTH;
-		double newY = startPosition[Y_AXIS] - JUMP_HEIGHT * sin(argument);
+		if (jumpDirection != -1) {
+			double argument = x1 * M_PI / JUMP_WIDTH;
+			newY = startPosition[Y_AXIS] - JUMP_HEIGHT * sin(argument);
+			if (newY > startPosition[Y_AXIS] && this->getBeginningAxisX() != startPosition[X_AXIS]) {
+				newY = startPosition[Y_AXIS];
+				setState(FALL_STATE);
+			}
+		} else {
+			newY = this->getBeginningAxisY() - distance;
 
-		if (newY >= startPosition[Y_AXIS] && this->getBeginningAxisX() != startPosition[X_AXIS]) {
-			newY = startPosition[Y_AXIS];
-			setState(DEFAULT_STATE);
+			if (newY <= startPosition[Y_AXIS] - JUMP_HEIGHT) {
+				newY = startPosition[Y_AXIS] - JUMP_HEIGHT;
+				setState(FALL_STATE);
+			}
 		}
 		
-		printf("%f %f\n", newX, newY);
-		this->printObject();
-		//this->setPositionX(newX);
-		this->setPosition(newX, newY);
+		if (!this->setPositionX(newX))
+			setState(FALL_STATE);
+		if (!this->setPositionY(newY))
+			setState(FALL_STATE);
 	}
 
-	void fall(double distance) {
-
+	void fall(double distance, GameObject *floor) {
+		if (this->getEndAxisY() + distance > floor->getBeginningAxisY()) {
+			this->setPositionY(floor->getBeginningAxisY() - this->getHeight());
+			this->setState(DEFAULT_STATE);
+		} else {
+			this->setPositionY(this->getBeginningAxisY() + distance);
+		}
 	}
 
 	void setDirection(int direction, int type) {
@@ -146,9 +173,14 @@ public:
 		return jumpPosition;
 	}
 
+	void setJumpDirection(int direction) {
+		this->jumpDirection = direction;
+	}
+
 private:
 	int direction[2];
 	double jumpPosition[2];
+	int jumpDirection;
 	int state;
 	GameObject *floor, *ladder;
 };
