@@ -36,7 +36,7 @@ public:
 		return true;
 	}
 
-	static GameObject* SetCurrentCollider(GameObject *object[MAX_FLOORS], Movable* mv, int mode) {
+	static GameObject* GetCollider(GameObject *object[MAX_FLOORS], Movable* mv, int mode) {
 		for (int i = 0; i < MAX_FLOORS; i++) {
 			if (object[i] == nullptr)
 				return nullptr;
@@ -51,12 +51,31 @@ public:
 		}
 	}
 
+	static GameObject* GetNearestFloor(GameObject* object[MAX_FLOORS], Movable *mv) {
+		GameObject* floor = object[0];
+
+		for (int i = MAX_FLOORS - 1; i >= 0; i--) {
+			if (object[i] == nullptr)
+				continue;
+			
+			if (!CollisionOnAxisX(*object[i], *mv))
+				continue;
+
+			if (object[i]->getBeginningAxisY() < mv->getEndAxisY())
+				continue;
+
+			return object[i];
+		}
+
+		return floor;
+	}
+
 private:
 	static bool CollisionOnAxisX(GameObject go, Movable mv) {
-		if (go.getBeginningAxisX() > mv.getBeginningAxisX())
+		if (go.getBeginningAxisX() > mv.getEndAxisX())
 			return false;
 
-		if (go.getEndAxisX() < mv.getEndAxisX())
+		if (go.getEndAxisX() < mv.getBeginningAxisX())
 			return false;
 
 		return true;
