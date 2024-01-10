@@ -66,11 +66,6 @@ int main(int argc, char **argv) {
 	if (game->init())
 		game->start();
 
-//		if (!Collider::CollisionBetweenMovableAndObject(*floor, *player) &&
-//			!Collider::CollisionBetweenMovableAndObject(*ladder, *player)) {
-//			player->move(SDLK_DOWN, 2, *ladder);
-//		}
-
 	// free memory
 	delete(game);
 	clearAll(screen, scrtex, window, renderer);

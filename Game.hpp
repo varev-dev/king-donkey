@@ -45,14 +45,12 @@ public:
 		for (int i = 0; i < MAX_FLOORS; i++) {
 			if (floors[i] == nullptr)
 				break;
-
 			delete(floors[i]);
 		}
 
 		for (int i = 0; i < MAX_LADDERS; i++) {
 			if (ladders[i] == nullptr)
 				break;
-
 			delete(ladders[i]);
 		}
 
@@ -67,8 +65,6 @@ public:
 	void start() {
 		SDL_Event event;
 		levelSetup();
-		player->setState(DEFAULT_STATE);
-		printf("%f", HIGHEST_FLOOR);
 
 		while (!quit) {
 			workWithDelta();
@@ -197,7 +193,9 @@ private:
 					event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT) && 
 					player->getState() == DEFAULT_STATE) {
 				player->setDirection(event.key.keysym.sym, PRESSED);
-			} else if (event.key.keysym.sym == SDLK_SPACE && player->getState() == DEFAULT_STATE) {
+			} else if (event.key.keysym.sym == SDLK_SPACE && 
+					player->getState() == DEFAULT_STATE && player->getFloor() != nullptr) {
+				player->setJumpDirection(player->getDirection(X_AXIS));
 				player->setState(JUMP_STATE);
 			} else if (event.key.keysym.sym == SDLK_n) {
 				levelSetup();
@@ -205,9 +203,8 @@ private:
 			}
 			break;
 		case SDL_KEYUP:
-			if ((event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN ||
-					event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT) &&
-					player->getState() == DEFAULT_STATE)
+			if (event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN ||
+					event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT)
 				player->setDirection(event.key.keysym.sym, RELEASED);
 			break;
 		case SDL_QUIT:
@@ -217,18 +214,19 @@ private:
 	}
 
 	void movement() {
-		if (player->getState() == DEFAULT_STATE) {
-			// CLIMB LADDER
+		if (player->getState() == JUMP_STATE) {
+			// JUMP
+			player->jump(delta * JUMP_SPEED, player->getJumpPosition());
+		} else if (player->getState() == FALL_STATE) {
+			// FALL
+			player->fall(delta * JUMP_SPEED * 2/3, Collider::GetNearestFloor(floors, player));
+		} else if (player->getState() == DEFAULT_STATE) {
+			// CLIMB
 			if (player->getLadder() != nullptr && Collider::IsMovePossibleOnAxisY(*player->getLadder(), *player))
 				player->move(player->getDirection(Y_AXIS), delta * CLIMB_SPEED);
 			// WALK
 			if (Collider::IsMovePossibleOnAxisX(*player->getFloor(), *player))
 				player->move(player->getDirection(X_AXIS), delta * MOVE_SPEED);
-		} else if (player->getState() == JUMP_STATE && player->getDirection(Y_AXIS) == -1) {
-			// JUMP
-			player->jump(player->getDirection(X_AXIS), delta * JUMP_SPEED, player->getJumpPosition());
-		} else if (player->getState() == FALL_STATE) {
-
 		}
 	}
 
