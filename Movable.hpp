@@ -94,19 +94,20 @@ public:
 		if (x1 < 0)
 			x1 *= -1;
 
-		double newX = this->getBeginningAxisX(), newY;
-
-		if (jumpDirection == LEFT)
-			newX -= distance;
-		if (jumpDirection == RIGHT)
-			newX += distance;
+		double newX = this->getBeginningAxisX(), newY = 0;
 
 		if (jumpDirection != -1) {
+			newX += distance * (jumpDirection == LEFT ? -1 : 1);
 			double argument = x1 * M_PI / JUMP_WIDTH;
 
-			newY = -pow(x1-1,2)+1;
+			if (argument <= M_PI)
+				newY = startPosition[Y_AXIS] - JUMP_HEIGHT * sin(argument);
+			else if (argument > M_PI && argument < M_PI + 1)
+				newY = startPosition[Y_AXIS] - JUMP_HEIGHT * (acos(argument - M_PI) - M_PI / 2);
+			else
+				newY = getBeginningAxisY() + 3 * distance;
 		} else {
-			newY = this->getBeginningAxisY() - distance;
+			newY = this->getBeginningAxisY() - distance * sin(M_PI/3);
 
 			if (newY <= startPosition[Y_AXIS] - JUMP_HEIGHT) {
 				newY = startPosition[Y_AXIS] - JUMP_HEIGHT;
@@ -118,7 +119,7 @@ public:
 			newY = floor->getBeginningAxisY() - height;
 			setState(DEFAULT_STATE);
 		}
-		
+
 		if (!this->setPositionX(newX))
 			setState(FALL_STATE);
 		if (!this->setPositionY(newY))
@@ -126,11 +127,15 @@ public:
 	}
 
 	void fall(double distance, GameObject *floor) {
+		int direction = this->getDirection(X_AXIS);
+		if (direction != -1)
+			setPositionX(getBeginningAxisX() - (direction == LEFT ? 1 : -1) * distance / 3);
+
 		if (this->getEndAxisY() + distance > floor->getBeginningAxisY()) {
 			this->setPositionY(floor->getBeginningAxisY() - this->getHeight());
 			this->setState(DEFAULT_STATE);
 		} else {
-			this->setPositionY(this->getBeginningAxisY() + distance);
+			this->setPositionY(this->getBeginningAxisY() + distance * sin(M_PI / 2));
 		}
 	}
 
