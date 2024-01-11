@@ -103,11 +103,8 @@ public:
 
 		if (jumpDirection != -1) {
 			double argument = x1 * M_PI / JUMP_WIDTH;
-			newY = startPosition[Y_AXIS] - JUMP_HEIGHT * sin(argument);
-			if (newY > startPosition[Y_AXIS] && this->getBeginningAxisX() != startPosition[X_AXIS]) {
-				newY = startPosition[Y_AXIS];
-				setState(FALL_STATE);
-			}
+
+			newY = -pow(x1-1,2)+1;
 		} else {
 			newY = this->getBeginningAxisY() - distance;
 
@@ -115,6 +112,11 @@ public:
 				newY = startPosition[Y_AXIS] - JUMP_HEIGHT;
 				setState(FALL_STATE);
 			}
+		}
+
+		if (newY > floor->getBeginningAxisY() - height) {
+			newY = floor->getBeginningAxisY() - height;
+			setState(DEFAULT_STATE);
 		}
 		
 		if (!this->setPositionX(newX))

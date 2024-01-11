@@ -52,7 +52,7 @@ public:
 	}
 
 	static GameObject* GetNearestFloor(GameObject* object[MAX_FLOORS], Movable *mv) {
-		GameObject* floor = object[0];
+		GameObject* nearest = nullptr;
 
 		for (int i = MAX_FLOORS - 1; i >= 0; i--) {
 			if (object[i] == nullptr)
@@ -64,10 +64,12 @@ public:
 			if (object[i]->getBeginningAxisY() < mv->getEndAxisY())
 				continue;
 
+			/*if (nearest != nullptr &&
+				object[i]->getBeginningAxisY() > nearest->getBeginningAxisY())
+				continue;*/
+
 			return object[i];
 		}
-
-		return floor;
 	}
 
 private:
