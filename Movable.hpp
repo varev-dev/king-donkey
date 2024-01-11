@@ -30,13 +30,14 @@ public:
 		this->height = sprite->h;
 
 		// default state
-		direction[X_AXIS] = -1;
-		direction[Y_AXIS] = -1;
+		direction[X_AXIS] = UNDEF;
+		direction[Y_AXIS] = UNDEF;
 		state = DEFAULT_STATE;
 		floor = nullptr;
 		ladder = nullptr;
 		jumpPosition[X_AXIS] = GAME_BEG_X;
 		jumpPosition[Y_AXIS] = GAME_BEG_Y;
+		jumpDirection = UNDEF;
 	}
 
 	void setFloor(GameObject *floor) {
@@ -96,7 +97,7 @@ public:
 
 		double newX = this->getBeginningAxisX(), newY = 0;
 
-		if (jumpDirection != -1) {
+		if (jumpDirection != UNDEF) {
 			newX += distance * (jumpDirection == LEFT ? -1 : 1);
 			double argument = x1 * M_PI / JUMP_WIDTH;
 
@@ -128,7 +129,7 @@ public:
 
 	void fall(double distance, GameObject *floor) {
 		int direction = this->getDirection(X_AXIS);
-		if (direction != -1)
+		if (direction != UNDEF)
 			setPositionX(getBeginningAxisX() - (direction == LEFT ? 1 : -1) * distance / 3);
 
 		if (this->getEndAxisY() + distance > floor->getBeginningAxisY()) {
@@ -141,17 +142,17 @@ public:
 
 	void setDirection(int direction, int type) {
 		switch (direction) {
-		case SDLK_LEFT:
-			this->direction[X_AXIS] = type == PRESSED ? LEFT : -1;
+		case KEY_LEFT:
+			this->direction[X_AXIS] = type == PRESSED ? LEFT : UNDEF;
 			break;
-		case SDLK_RIGHT:
-			this->direction[X_AXIS] = type == PRESSED ? RIGHT : -1;
+		case KEY_RIGHT:
+			this->direction[X_AXIS] = type == PRESSED ? RIGHT : UNDEF;
 			break;
-		case SDLK_UP:
-			this->direction[Y_AXIS] = type == PRESSED ? UP : -1;
+		case KEY_UP:
+			this->direction[Y_AXIS] = type == PRESSED ? UP : UNDEF;
 			break;
-		case SDLK_DOWN:
-			this->direction[Y_AXIS] = type == PRESSED ? DOWN : -1;
+		case KEY_DOWN:
+			this->direction[Y_AXIS] = type == PRESSED ? DOWN : UNDEF;
 			break;
 		}
 	}
@@ -167,7 +168,7 @@ public:
 
 	int getDirection(int axis) {
 		if (axis != X_AXIS && axis != Y_AXIS)
-			return -1;
+			return UNDEF;
 
 		return direction[axis];
 	}

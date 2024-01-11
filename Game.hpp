@@ -6,14 +6,15 @@
 
 #define MOVE_SPEED 200.0
 #define CLIMB_SPEED 150.0
-#define JUMP_SPEED 200.0
+#define JUMP_SPEED 250.0
+#define FALL_SPEED 300.0
 
 #define SECOND_TO_MS 1000.0
 #define REFRESH_PER_SECOND 2.0
 
 class Game {
 public:
-	Game(SDL_Surface *screen, SDL_Texture *scrtex, SDL_Renderer *renderer) {
+	Game(SDL_Surface* screen, SDL_Texture* scrtex, SDL_Renderer* renderer) {
 		width = SCREEN_WIDTH - 2 * BORDER_SIZE;
 		height = SCREEN_HEIGHT - BORDER_SIZE - INFO_BAR_SIZE;
 
@@ -41,7 +42,7 @@ public:
 	~Game() {
 		currentLadder = nullptr;
 		currentFloor = nullptr;
-		
+
 		for (int i = 0; i < MAX_FLOORS; i++) {
 			if (floors[i] == nullptr)
 				break;
@@ -86,9 +87,9 @@ public:
 
 private:
 	// SDL types
-	SDL_Surface *screen, *charset, *platform, *ladder, *character, *sand, *wood;
-	SDL_Texture *scrtex;
-	SDL_Renderer *renderer;
+	SDL_Surface* screen, * charset, * platform, * ladder, * character, * sand, * wood;
+	SDL_Texture* scrtex;
+	SDL_Renderer* renderer;
 
 	// Utils
 	int tick1, tick2, quit, frames;
@@ -101,11 +102,11 @@ private:
 	int width, height;
 
 	// All Game Objects
-	GameObject *ladders[MAX_LADDERS], *floors[MAX_FLOORS];
-	Movable *player;
+	GameObject* ladders[MAX_LADDERS], * floors[MAX_FLOORS];
+	Movable* player;
 
 	// Objects currently interacting with player
-	GameObject *currentLadder, *currentFloor;
+	GameObject* currentLadder, * currentFloor;
 
 	bool validateSetup() {
 		if (character == NULL) {
@@ -175,7 +176,7 @@ private:
 			go->printOnScreen(screen);
 		}
 	}
-	
+
 	void sdl_refresh() {
 		SDL_UpdateTexture(scrtex, NULL, screen->pixels, screen->pitch);
 		// SDL_RenderClear(renderer); (?)
@@ -184,28 +185,25 @@ private:
 	}
 
 	void handleEvents(SDL_Event event) {
+		SDL_Keycode key = event.key.keysym.sym;
+		bool moveKey = (key == KEY_UP || key == KEY_DOWN || key == KEY_LEFT || key == KEY_RIGHT);
 		switch (event.type) {
 		case SDL_KEYDOWN:
-			if (event.key.keysym.sym == SDLK_ESCAPE) {
+			if (key == KEY_ESCAPE) {
 				quit = 1;
-			}
-			else if ((event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN ||
-					event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT) && 
-					player->getState() == DEFAULT_STATE) {
-				player->setDirection(event.key.keysym.sym, PRESSED);
-			} else if (event.key.keysym.sym == SDLK_SPACE && 
-					player->getState() == DEFAULT_STATE && player->getFloor() != nullptr) {
-				player->setJumpDirection(player->getDirection(X_AXIS));
-				player->setState(JUMP_STATE);
-			} else if (event.key.keysym.sym == SDLK_n) {
+			} else if (key == KEY_RESET) {
 				levelSetup();
 				gameTime = 0;
+			} else if (moveKey && player->getState() == DEFAULT_STATE) {
+				player->setDirection(key, PRESSED);
+			} else if (key == KEY_JUMP && player->getState() == DEFAULT_STATE && player->getFloor() != nullptr) {
+				player->setJumpDirection(player->getDirection(X_AXIS));
+				player->setState(JUMP_STATE);
 			}
 			break;
 		case SDL_KEYUP:
-			if (event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN ||
-					event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT)
-				player->setDirection(event.key.keysym.sym, RELEASED);
+			if (moveKey)
+				player->setDirection(key, RELEASED);
 			break;
 		case SDL_QUIT:
 			quit = 1;
@@ -216,10 +214,11 @@ private:
 	void movement() {
 		if (player->getState() == JUMP_STATE) {
 			// JUMP
+			player->setFloor(Collider::GetNearestFloor(floors, player));
 			player->jump(delta * JUMP_SPEED, player->getJumpPosition());
 		} else if (player->getState() == FALL_STATE) {
 			// FALL
-			player->fall(delta * JUMP_SPEED * 2/3, Collider::GetNearestFloor(floors, player));
+			player->fall(delta * FALL_SPEED, Collider::GetNearestFloor(floors, player));
 		} else if (player->getState() == DEFAULT_STATE) {
 			// CLIMB
 			if (player->getLadder() != nullptr && Collider::IsMovePossibleOnAxisY(*player->getLadder(), *player))

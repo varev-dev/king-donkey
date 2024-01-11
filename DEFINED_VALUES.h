@@ -23,6 +23,7 @@
 #define FLOOR 1
 #define LADDER 2
 
+#define UNDEF -1
 #define LEFT 0
 #define RIGHT 1
 #define UP 2
@@ -31,3 +32,16 @@
 
 #define X_AXIS 0
 #define Y_AXIS 1
+
+extern "C" {
+#include"./SDL2-2.0.10/include/SDL.h"
+#include"./SDL2-2.0.10/include/SDL_main.h"
+}
+
+#define KEY_LEFT SDLK_LEFT
+#define KEY_RIGHT SDLK_RIGHT
+#define KEY_UP SDLK_UP
+#define KEY_DOWN SDLK_DOWN
+#define KEY_JUMP SDLK_SPACE
+#define KEY_ESCAPE SDLK_ESCAPE
+#define KEY_RESET SDLK_n
