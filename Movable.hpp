@@ -4,11 +4,6 @@
 #include "DEFINED_VALUES.h"
 #include <math.h>
 
-extern "C" {
-	#include"./SDL2-2.0.10/include/SDL.h"
-	#include"./SDL2-2.0.10/include/SDL_main.h"
-}
-
 #define JUMP_WIDTH 96
 #define JUMP_HEIGHT 48
 
@@ -143,15 +138,19 @@ public:
 	void setDirection(int direction, int type) {
 		switch (direction) {
 		case KEY_LEFT:
+		case LEFT:
 			this->direction[X_AXIS] = type == PRESSED ? LEFT : UNDEF;
 			break;
 		case KEY_RIGHT:
+		case RIGHT:
 			this->direction[X_AXIS] = type == PRESSED ? RIGHT : UNDEF;
 			break;
 		case KEY_UP:
+		case UP:
 			this->direction[Y_AXIS] = type == PRESSED ? UP : UNDEF;
 			break;
 		case KEY_DOWN:
+		case DOWN:
 			this->direction[Y_AXIS] = type == PRESSED ? DOWN : UNDEF;
 			break;
 		}

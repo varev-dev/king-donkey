@@ -1,16 +1,11 @@
 #define _USE_MATH_DEFINES
-#include<stdio.h>
-#include<string.h>
-
-extern "C" {
-#include"./SDL2-2.0.10/include/SDL.h"
-#include"./SDL2-2.0.10/include/SDL_main.h"
-}
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "DEFINED_VALUES.h"
 #include "Game.hpp";
 
-// main
 #ifdef __cplusplus
 extern "C"
 #endif
@@ -60,6 +55,8 @@ int main(int argc, char **argv) {
 
 	// wy³¹czenie widocznoœci kursora myszy
 	SDL_ShowCursor(SDL_DISABLE);
+
+	srand(time(NULL));
 
 	Game *game = new Game(screen, scrtex, renderer);
 	// validate game init

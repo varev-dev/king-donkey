@@ -4,6 +4,9 @@
 #include "SDL_Utils.hpp"
 #include "DEFINED_VALUES.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #define MOVE_SPEED 200.0
 #define CLIMB_SPEED 150.0
 #define JUMP_SPEED 250.0
@@ -28,6 +31,7 @@ public:
 		character = SDL_LoadBMP("./bmp/player32x48.bmp");
 		sand = SDL_LoadBMP("./bmp/sand16x16.bmp");
 		wood = SDL_LoadBMP("./bmp/wood16x16.bmp");
+		barrelSrf = SDL_LoadBMP("./bmp/barrel24x24.bmp");
 
 		black = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
 		green = SDL_MapRGB(screen->format, 0x00, 0xFF, 0x00);
@@ -75,11 +79,15 @@ public:
 			printInformation();
 			sdl_refresh();
 
-			setCurrentColliders();
+			setCurrentColliders(player);
+			setCurrentColliders(barrel);
 
 			SDL_PollEvent(&event);
 			handleEvents(event);
+			barrelEvents(barrel);
+
 			movement();
+			barrelMovement(barrel);
 
 			frames++;
 		}
@@ -87,7 +95,7 @@ public:
 
 private:
 	// SDL types
-	SDL_Surface* screen, * charset, * platform, * ladder, * character, * sand, * wood;
+	SDL_Surface* screen, * charset, * platform, * ladder, * character, * sand, * wood, * barrelSrf;
 	SDL_Texture* scrtex;
 	SDL_Renderer* renderer;
 
@@ -103,7 +111,7 @@ private:
 
 	// All Game Objects
 	GameObject* ladders[MAX_LADDERS], * floors[MAX_FLOORS];
-	Movable* player;
+	Movable* player, * barrel;
 
 	// Objects currently interacting with player
 	GameObject* currentLadder, * currentFloor;
@@ -169,6 +177,7 @@ private:
 		}
 
 		player->printOnScreen(screen);
+		barrel->printOnScreen(screen);
 
 		for (GameObject* go : floors) {
 			if (go == nullptr)
@@ -229,9 +238,87 @@ private:
 		}
 	}
 
+	void barrelEvents(Movable* barrel) {
+		if (barrel->getFloor()->getBeginningAxisY() != barrel->getEndAxisY() && barrel->getLadder() == nullptr) {
+			barrel->setState(FALL_STATE);
+			return;
+		}
+
+		barrel->setState(DEFAULT_STATE);
+		int random = rand() % 2;
+
+		int floorAvailable = barrel->getFloor() != floors[0];
+		int ladderAvailable = barrel->getLadder() != nullptr;
+
+		if (ladderAvailable && ALWAYS_DOWN && barrel->getEndAxisY() != barrel->getLadder()->getEndAxisY()) {
+			barrel->setDirection(DOWN, PRESSED);
+			barrel->setDirection(barrel->getDirection(X_AXIS), RELEASED);
+			return;
+		}
+
+		if (barrel->getDirection(X_AXIS) == UNDEF) {
+			if (barrel->getFloor() == floors[0])
+				barrel->setDirection(FINISH_DIRECTION, PRESSED);
+			else
+				barrel->setDirection(random ? LEFT : RIGHT, PRESSED);
+		}
+
+		if (barrel->getBeginningAxisX() == barrel->getFloor()->getBeginningAxisX() ||
+			barrel->getEndAxisX() == barrel->getFloor()->getEndAxisX()) {
+			int direction = barrel->getDirection(X_AXIS);
+			barrel->setDirection(direction, RELEASED);
+			barrel->setDirection(direction == LEFT ? RIGHT : LEFT, PRESSED);
+		}
+
+		if (barrel->getLadder() == nullptr)
+			return;
+		barrel->getLadder()->printObject();
+	
+		random = rand() % 2;
+		if (barrel->getDirection(Y_AXIS) == UNDEF) {
+			if (random == 1)
+				barrel->setDirection(DOWN, PRESSED);
+			else
+				barrel->setDirection(UP, PRESSED);
+		}
+
+		if (barrel->getEndAxisY() == barrel->getLadder()->getBeginningAxisY()) {
+			int direction = barrel->getDirection(Y_AXIS);
+			barrel->setDirection(direction, RELEASED);
+		}
+
+		/*if(barrel->getLadder() != nullptr && barrel->getLadder()->getBeginningAxisY() != barrel->getEndAxisY()) {
+			barrel->setDirection(DOWN, PRESSED);
+			return;
+		} else {
+			barrel->setDirection(DOWN, RELEASED);
+		}*/
+		
+
+		printf("%d\n", barrel->getDirection(X_AXIS));
+	}
+
+	void barrelMovement(Movable* barrel) {
+		if (barrel->getState() == FALL_STATE) {
+			// FALL
+			barrel->fall(delta * FALL_SPEED, Collider::GetNearestFloor(floors, barrel));
+		}
+		else if (barrel->getState() == DEFAULT_STATE) {
+			// CLIMB
+			if (barrel->getLadder() != nullptr && Collider::IsMovePossibleOnAxisY(*barrel->getLadder(), *barrel))
+				barrel->move(barrel->getDirection(Y_AXIS), delta * CLIMB_SPEED);
+			// WALK
+			if (Collider::IsMovePossibleOnAxisX(*barrel->getFloor(), *barrel))
+				barrel->move(barrel->getDirection(X_AXIS), delta * MOVE_SPEED);
+		}
+	}
+
 	void levelSetup() {
 		player = new Movable(character, 
 				(SCREEN_WIDTH - character->w) / 2, GAME_END_Y - character->h - platform->h);
+
+		barrel = new Movable(barrelSrf, (SCREEN_WIDTH - character->w) / 2, GAME_BEG_Y);
+
 		floors[0] = new GameObject(sand,
 			BORDER_SIZE, GAME_END_Y - platform->h, 
 			SCREEN_WIDTH, platform->h);
@@ -310,12 +397,12 @@ private:
 		SDL_Utils::DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 28, text, charset);
 	}
 
-	void setCurrentColliders() {
-		player->setFloor(Collider::GetCollider(floors, player, FLOOR));
+	void setCurrentColliders(Movable *movable) {
+		movable->setFloor(Collider::GetCollider(floors, movable, FLOOR));
 		
-		if (player->getFloor() == nullptr)
-			player->setFloor(floors[0]);
+		if (movable->getFloor() == nullptr)
+			movable->setFloor(floors[0]);
 
-		player->setLadder(Collider::GetCollider(ladders, player, LADDER));
+		movable->setLadder(Collider::GetCollider(ladders, movable, LADDER));
 	}
 };
