@@ -23,6 +23,7 @@
 #define FLOOR 1
 #define LADDER 2
 
+// identify directions / actions
 #define UNDEF -1
 #define LEFT 0
 #define RIGHT 1
@@ -30,6 +31,12 @@
 #define DOWN 3
 #define JUMP 4
 
+// barrel config
+#define ALWAYS_DOWN 1
+#define ALLOW_FALL 0
+#define FINISH_DIRECTION LEFT
+
+// identify axis
 #define X_AXIS 0
 #define Y_AXIS 1
 
@@ -38,6 +45,7 @@ extern "C" {
 #include"./SDL2-2.0.10/include/SDL_main.h"
 }
 
+// control keys
 #define KEY_LEFT SDLK_LEFT
 #define KEY_RIGHT SDLK_RIGHT
 #define KEY_UP SDLK_UP
