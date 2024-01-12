@@ -1,6 +1,6 @@
 #include<string.h>
 
-#include "Collider.hpp"
+#include "LevelBuilder.hpp"
 #include "SDL_Utils.hpp"
 #include "DEFINED_VALUES.h"
 
@@ -26,68 +26,57 @@ public:
 		this->renderer = renderer;
 
 		charset = SDL_LoadBMP("./bmp/cs8x8.bmp");
-		platform = SDL_LoadBMP("./bmp/platform16x16.bmp");
-		ladder = SDL_LoadBMP("./bmp/ladder16x16.bmp");
-		character = SDL_LoadBMP("./bmp/player32x48.bmp");
-		sand = SDL_LoadBMP("./bmp/sand16x16.bmp");
-		wood = SDL_LoadBMP("./bmp/wood16x16.bmp");
-		barrelSrf = SDL_LoadBMP("./bmp/barrel24x24.bmp");
+		level = new Level();
 
 		black = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
 		green = SDL_MapRGB(screen->format, 0x00, 0xFF, 0x00);
 		red = SDL_MapRGB(screen->format, 0xFF, 0x00, 0x00);
 		blue = SDL_MapRGB(screen->format, 0x11, 0x11, 0xCC);
-		currentLadder = nullptr;
-		currentFloor = nullptr;
 
 		startSetup();
 	}
 
 	~Game() {
-		currentLadder = nullptr;
-		currentFloor = nullptr;
-
-		for (int i = 0; i < MAX_FLOORS; i++) {
-			if (floors[i] == nullptr)
-				break;
-			delete(floors[i]);
-		}
-
-		for (int i = 0; i < MAX_LADDERS; i++) {
-			if (ladders[i] == nullptr)
-				break;
-			delete(ladders[i]);
-		}
-
 		SDL_RenderClear(renderer);
-		delete(player);
 	}
 
 	bool init() {
-		return validateSetup();
+		if (charset == NULL) {
+			printf("SDL_LoadBMP charset error: %s\n", SDL_GetError());
+			return false;
+		}
+
+		SDL_SetColorKey(charset, true, 0x000000);
+
+		if (!level->validateSetup())
+			return false;
+
+		return true;
 	}
 
 	void start() {
 		SDL_Event event;
-		levelSetup();
+		level->setUpLevel(1);
 
 		while (!quit) {
 			workWithDelta();
 			SDL_FillRect(screen, NULL, black);
+
 			printObjects();
 			printBorder();
 			printInformation();
+
 			sdl_refresh();
 
-			setCurrentColliders(player);
-			setCurrentColliders(barrel);
+			level->setCurrentColliders(level->player);
+			//level.setCurrentColliders(level.barrel);
 
 			SDL_PollEvent(&event);
 			handleEvents(event);
-			barrelEvents(barrel);
+			//barrelEvents(barrel);
 
 			movement();
-			barrelMovement(barrel);
+			//barrelMovement(barrel);
 
 			frames++;
 		}
@@ -95,9 +84,10 @@ public:
 
 private:
 	// SDL types
-	SDL_Surface* screen, * charset, * platform, * ladder, * character, * sand, * wood, * barrelSrf;
+	SDL_Surface* screen, * charset;
 	SDL_Texture* scrtex;
 	SDL_Renderer* renderer;
+	Level* level;
 
 	// Utils
 	int tick1, tick2, quit, frames;
@@ -108,39 +98,6 @@ private:
 
 	// Game Window
 	int width, height;
-
-	// All Game Objects
-	GameObject* ladders[MAX_LADDERS], * floors[MAX_FLOORS];
-	Movable* player, * barrel;
-
-	// Objects currently interacting with player
-	GameObject* currentLadder, * currentFloor;
-
-	bool validateSetup() {
-		if (character == NULL) {
-			printf("SDL_LoadBMP character error: %s\n", SDL_GetError());
-			return false;
-		}
-
-		if (ladder == NULL) {
-			printf("SDL_LoadBMP ladder error: %s\n", SDL_GetError());
-			return false;
-		}
-
-		if (platform == NULL) {
-			printf("SDL_LoadBMP platform error: %s\n", SDL_GetError());
-			return false;
-		}
-
-		if (charset == NULL) {
-			printf("SDL_LoadBMP charset error: %s\n", SDL_GetError());
-			return false;
-		}
-
-		SDL_SetColorKey(charset, true, 0x000000);
-
-		return true;
-	}
 
 	void startSetup() {
 		tick1 = SDL_GetTicks();
@@ -170,16 +127,18 @@ private:
 	}
 
 	void printObjects() {
-		for (GameObject* go : ladders) {
+		for (GameObject* go : level->ladders) {
 			if (go == nullptr)
 				break;
 			go->printOnScreen(screen);
 		}
 
-		player->printOnScreen(screen);
-		barrel->printOnScreen(screen);
+		level->player->printOnScreen(screen);
 
-		for (GameObject* go : floors) {
+		/*if (barrel != nullptr)
+			barrel->printOnScreen(screen);*/
+
+		for (GameObject* go : level->floors) {
 			if (go == nullptr)
 				break;
 			go->printOnScreen(screen);
@@ -201,18 +160,18 @@ private:
 			if (key == KEY_ESCAPE) {
 				quit = 1;
 			} else if (key == KEY_RESET) {
-				levelSetup();
+				level->setUpLevel(1);
 				gameTime = 0;
-			} else if (moveKey && player->getState() == DEFAULT_STATE) {
-				player->setDirection(key, PRESSED);
-			} else if (key == KEY_JUMP && player->getState() == DEFAULT_STATE && player->getFloor() != nullptr) {
-				player->setJumpDirection(player->getDirection(X_AXIS));
-				player->setState(JUMP_STATE);
+			} else if (moveKey && level->player->getState() == DEFAULT_STATE) {
+				level->player->setDirection(key, PRESSED);
+			} else if (key == KEY_JUMP && level->player->getState() == DEFAULT_STATE && level->player->getFloor() != nullptr) {
+				level->player->setJumpDirection(level->player->getDirection(X_AXIS));
+				level->player->setState(JUMP_STATE);
 			}
 			break;
 		case SDL_KEYUP:
 			if (moveKey)
-				player->setDirection(key, RELEASED);
+				level->player->setDirection(key, RELEASED);
 			break;
 		case SDL_QUIT:
 			quit = 1;
@@ -221,13 +180,14 @@ private:
 	}
 
 	void movement() {
+		Movable* player = level->player;
 		if (player->getState() == JUMP_STATE) {
 			// JUMP
-			player->setFloor(Collider::GetNearestFloor(floors, player));
+			player->setFloor(Collider::GetNearestFloor(level->floors, player));
 			player->jump(delta * JUMP_SPEED, player->getJumpPosition());
 		} else if (player->getState() == FALL_STATE) {
 			// FALL
-			player->fall(delta * FALL_SPEED, Collider::GetNearestFloor(floors, player));
+			player->fall(delta * FALL_SPEED, Collider::GetNearestFloor(level->floors, player));
 		} else if (player->getState() == DEFAULT_STATE) {
 			// CLIMB
 			if (player->getLadder() != nullptr && Collider::IsMovePossibleOnAxisY(*player->getLadder(), *player))
@@ -247,7 +207,7 @@ private:
 		barrel->setState(DEFAULT_STATE);
 		int random = rand() % 2;
 
-		int floorAvailable = barrel->getFloor() != floors[0];
+		int floorAvailable = barrel->getFloor() != level->floors[0];
 		int ladderAvailable = barrel->getLadder() != nullptr;
 
 		if (ladderAvailable && ALWAYS_DOWN && barrel->getEndAxisY() != barrel->getLadder()->getEndAxisY()) {
@@ -257,22 +217,21 @@ private:
 		}
 
 		if (barrel->getDirection(X_AXIS) == UNDEF) {
-			if (barrel->getFloor() == floors[0])
+			if (barrel->getFloor() == level->floors[0])
 				barrel->setDirection(FINISH_DIRECTION, PRESSED);
 			else
 				barrel->setDirection(random ? LEFT : RIGHT, PRESSED);
 		}
 
-		if (barrel->getBeginningAxisX() == barrel->getFloor()->getBeginningAxisX() ||
+		if ((barrel->getFloor() != level->floors[0] && barrel->getBeginningAxisX() == barrel->getFloor()->getBeginningAxisX()) ||
 			barrel->getEndAxisX() == barrel->getFloor()->getEndAxisX()) {
 			int direction = barrel->getDirection(X_AXIS);
 			barrel->setDirection(direction, RELEASED);
 			barrel->setDirection(direction == LEFT ? RIGHT : LEFT, PRESSED);
 		}
 
-		if (barrel->getLadder() == nullptr)
+		if (barrel->getLadder() == nullptr) 
 			return;
-		barrel->getLadder()->printObject();
 	
 		random = rand() % 2;
 		if (barrel->getDirection(Y_AXIS) == UNDEF) {
@@ -293,15 +252,12 @@ private:
 		} else {
 			barrel->setDirection(DOWN, RELEASED);
 		}*/
-		
-
-		printf("%d\n", barrel->getDirection(X_AXIS));
 	}
 
 	void barrelMovement(Movable* barrel) {
 		if (barrel->getState() == FALL_STATE) {
 			// FALL
-			barrel->fall(delta * FALL_SPEED, Collider::GetNearestFloor(floors, barrel));
+			barrel->fall(delta * FALL_SPEED, Collider::GetNearestFloor(level->floors, barrel));
 		}
 		else if (barrel->getState() == DEFAULT_STATE) {
 			// CLIMB
@@ -309,66 +265,11 @@ private:
 				barrel->move(barrel->getDirection(Y_AXIS), delta * CLIMB_SPEED);
 			// WALK
 			if (Collider::IsMovePossibleOnAxisX(*barrel->getFloor(), *barrel))
-				barrel->move(barrel->getDirection(X_AXIS), delta * MOVE_SPEED);
+				barrel->move(barrel->getDirection(X_AXIS), delta * MOVE_SPEED, 0);
 		}
-	}
-
-	void levelSetup() {
-		player = new Movable(character, 
-				(SCREEN_WIDTH - character->w) / 2, GAME_END_Y - character->h - platform->h);
-
-		barrel = new Movable(barrelSrf, (SCREEN_WIDTH - character->w) / 2, GAME_BEG_Y);
-
-		floors[0] = new GameObject(sand,
-			BORDER_SIZE, GAME_END_Y - platform->h, 
-			SCREEN_WIDTH, platform->h);
 		
-		floors[1] = new GameObject(wood,
-			GAME_BEG_X + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT, 
-			128, platform->h);
-
-		floors[2] = new GameObject(wood,
-			floors[1]->getEndAxisX() + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT,
-			128, platform->h);
-
-		floors[3] = new GameObject(wood,
-			floors[2]->getEndAxisX() + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT,
-			128, platform->h);
-
-		floors[4] = new GameObject(wood,
-			floors[1]->getBeginningAxisX() + 64, GAME_END_Y - platform->h - 2 * FLOOR_HEIGHT,
-			128*3/2, platform->h);
-
-		floors[5] = new GameObject(wood,
-			floors[1]->getEndAxisX() + 48, GAME_END_Y - platform->h - 3 * FLOOR_HEIGHT,
-			128 * 2, platform->h);
-
-		ladders[0] = new GameObject(ladder,
-			floors[1]->getBeginningAxisX() + 32, GAME_END_Y - platform->h - FLOOR_HEIGHT,
-			ladder->w, FLOOR_HEIGHT);
-
-		ladders[1] = new GameObject(ladder,
-			floors[2]->getBeginningAxisX() + 48, GAME_END_Y - platform->h - FLOOR_HEIGHT,
-			ladder->w, FLOOR_HEIGHT);
-
-		ladders[2] = new GameObject(ladder,
-			floors[3]->getBeginningAxisX() + 64, floors[3]->getBeginningAxisY(),
-			ladder->w, FLOOR_HEIGHT);
-
-		ladders[3] = new GameObject(ladder,
-			floors[3]->getBeginningAxisX() + 16, floors[5]->getBeginningAxisY(),
-			ladder->w, FLOOR_HEIGHT * 2);
-
-		ladders[4] = new GameObject(ladder,
-			floors[5]->getBeginningAxisX() + 32, floors[5]->getBeginningAxisY(),
-			ladder->w, FLOOR_HEIGHT);
-
-		ladders[5] = new GameObject(ladder,
-			floors[1]->getEndAxisX() - 32, floors[1]->getBeginningAxisY() - FLOOR_HEIGHT,
-			ladder->w, FLOOR_HEIGHT);
-
-		ladders[6] = nullptr;
-		floors[6] = nullptr;
+		if (barrel->getFloor() == level->floors[0] && barrel->getBeginningAxisX() == 0)
+			barrel = nullptr;
 	}
 
 	void printBorder() {
@@ -391,18 +292,10 @@ private:
 
 	void printInformation() {
 		char text[128];
-		sprintf(text, "\032 - Move Left \030 - Climb up \033 - Move Right \031 - Climb down");
+		sprintf(text, "Donkey Kong");
 		SDL_Utils::DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 12, text, charset);
 		sprintf(text, "In game time = %.1lf s, %.0lf fps", gameTime, fps);
 		SDL_Utils::DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 28, text, charset);
 	}
 
-	void setCurrentColliders(Movable *movable) {
-		movable->setFloor(Collider::GetCollider(floors, movable, FLOOR));
-		
-		if (movable->getFloor() == nullptr)
-			movable->setFloor(floors[0]);
-
-		movable->setLadder(Collider::GetCollider(ladders, movable, LADDER));
-	}
 };
