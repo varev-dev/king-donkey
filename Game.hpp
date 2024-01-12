@@ -134,7 +134,7 @@ private:
 		}
 
 		level->player->printOnScreen(screen);
-
+		level->spawner->printOnScreen(screen);
 		/*if (barrel != nullptr)
 			barrel->printOnScreen(screen);*/
 

@@ -8,7 +8,7 @@ extern "C" {
 
 class Level {
 public:
-	SDL_Surface* s_platform, * s_ladder, * s_character, * s_sand, * s_wood, * s_rotten, * s_footbridge, * s_barrel;
+	SDL_Surface* s_platform, * s_ladder, * s_character, * s_sand, * s_wood, * s_rotten, * s_footbridge, * s_barrel, * s_boss;
 	GameObject* floors[MAX_ELEMENTS], * ladders[MAX_ELEMENTS], * finishObject, * currentLadder, * currentFloor, * spawner;
 	Movable* player, * barrels[MAX_ELEMENTS];
 	int floors_ctr, ladders_ctr, barrels_ctr;
@@ -23,6 +23,7 @@ public:
 		s_rotten = SDL_LoadBMP("./bmp/rotten-wood16x16.bmp");
 		s_footbridge = SDL_LoadBMP("./bmp/footbridge16x16.bmp");
 		s_barrel = SDL_LoadBMP("./bmp/barrel24x24.bmp");
+		s_boss = SDL_LoadBMP("./bmp/boss64x64.bmp");
 
 		finishObject = nullptr;
 		currentLadder = nullptr;
@@ -51,33 +52,48 @@ public:
 			// FLOORS
 			// ground lv
 			createMainFloor();
+
 			// first lv
-			addFloor(48, floors[0]->getHeight() + FLOOR_HEIGHT, 128, PLANKS);
-			addFloor(128 + 48 * 2, floors[0]->getHeight() + FLOOR_HEIGHT, 64, PLANKS);
-			addFloor(64 * 3 + 48 * 3, floors[0]->getHeight() + FLOOR_HEIGHT, 144, PLANKS);
+			addFloor(256, floors[0]->getHeight() + FLOOR_HEIGHT, 96, PLANKS);
+			addFloor(256+96, floors[0]->getHeight() + FLOOR_HEIGHT, 64, FOOTBRIDGE);
+			addFloor(256+96+64, floors[0]->getHeight() + FLOOR_HEIGHT, 96, PLANKS);
+
 			// second lv
 			addFloor(0, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 96, ROTTEN);
-			addFloor(120 + JUMP_WIDTH, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 192, PLANKS);
-			addFloor(GAME_END_X - 144, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 72, PLANKS);
+			addFloor(120 + JUMP_WIDTH, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 160, PLANKS);
+			addFloor(floors[5]->getEndAxisX() - GAME_BEG_X, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 96, FOOTBRIDGE);
+			addFloor(floors[6]->getEndAxisX() - GAME_BEG_X, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 256, PLANKS);
+			
 			// third lv
 			addFloor(48, floors[0]->getHeight() + FLOOR_HEIGHT * 3, 72, ROTTEN);
 			addFloor(144 + JUMP_WIDTH * 1/2, floors[0]->getHeight() + FLOOR_HEIGHT * 3, 64, PLANKS);
 			addFloor(144 + JUMP_WIDTH * 1/2 + 64, floors[0]->getHeight() + FLOOR_HEIGHT * 3, 64, FOOTBRIDGE);
-			addFloor(144 + JUMP_WIDTH * 1 / 2 + 128, floors[0]->getHeight() + FLOOR_HEIGHT * 3, SCREEN_WIDTH, PLANKS);
+			addFloor(144 + JUMP_WIDTH * 1/2 + 128, floors[0]->getHeight() + FLOOR_HEIGHT * 3, SCREEN_WIDTH, PLANKS);
 
 			// LADDERS
-			addLadder(floors[1]->getEndAxisX() - 48, floors[1]->getBeginningAxisY(), 1, 1);
-			addLadder(floors[2]->getBeginningAxisX() + 32, floors[1]->getBeginningAxisY(), 1, 1);
-			addLadder(floors[5]->getEndAxisX() - 24, floors[5]->getBeginningAxisY(), 1, 1);
-			addLadder(floors[6]->getBeginningAxisX() + 32, floors[6]->getBeginningAxisY(), 2, 2);
-			addLadder(floors[7]->getBeginningAxisX() + 24, floors[7]->getBeginningAxisY(), 1, 1);
-			addLadder(floors[10]->getBeginningAxisX() + 16, floors[10]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[1]->getCenterOfAxisX() - 8, floors[1]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[7]->getBeginningAxisX() + 16, floors[7]->getBeginningAxisY(), 1, 1);
+			addLadder(GAME_END_X - 48, floors[7]->getBeginningAxisY(), 2, 2);
+			addLadder(floors[8]->getCenterOfAxisX() - 8, floors[8]->getBeginningAxisY(), 1, 1);
+			//addLadder(floors[9]->getBeginningAxisX() + 24, floors[9]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[11]->getBeginningAxisX() + 32, floors[11]->getBeginningAxisY(), 1, 1);
 
 			// FINISH
-			addLadder(floors[8]->getCenterOfAxisX() - 8, floors[8]->getBeginningAxisY() - FLOOR_HEIGHT, 1, 1);
+			addLadder(floors[9]->getCenterOfAxisX() - 16, floors[9]->getBeginningAxisY() - FLOOR_HEIGHT, 2, 1);
 			
+			spawner = new GameObject(s_boss, GAME_END_X - 72, floors[11]->getBeginningAxisY() - 64);
 			finishObject = ladders[ladders_ctr - 1];
 		}
+	}
+
+	void updateBarrel(double currentTime) {
+		if (lastSpawnTime + SPAWN_DELAY / 1000.0 > currentTime)
+			return;
+
+		if (barrels_ctr == MAX_ELEMENTS)
+			return;
+
+		createBarrel();
 	}
 
 	bool validateSetup() const  {
@@ -121,6 +137,11 @@ public:
 			return false;
 		}
 
+		if (s_boss == NULL) {
+			printf("SDL_LoadBMP boss error: %s\n", SDL_GetError());
+			return false;
+		}
+
 		return true;
 	}
 
@@ -157,6 +178,17 @@ public:
 			}
 			barrels[i] = nullptr;
 		}*/
+	}
+
+	void createBarrel() {
+		barrels[barrels_ctr++] = new Movable(s_barrel, spawner->getCenterOfAxisX(), spawner->getEndAxisY() - s_barrel->h);
+	}
+
+	void removeBarrel(int id) {
+		if (id >= MAX_ELEMENTS || id >= barrels_ctr)
+			return;
+
+
 	}
 
 	void createMainFloor(int type = SAND) {
