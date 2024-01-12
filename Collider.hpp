@@ -36,8 +36,8 @@ public:
 		return true;
 	}
 
-	static GameObject* GetCollider(GameObject *object[MAX_FLOORS], Movable* mv, int mode) {
-		for (int i = 0; i < MAX_FLOORS; i++) {
+	static GameObject* GetCollider(GameObject *object[MAX_ELEMENTS], Movable* mv, int mode) {
+		for (int i = 0; i < MAX_ELEMENTS; i++) {
 			if (object[i] == nullptr)
 				return nullptr;
 
@@ -49,12 +49,14 @@ public:
 				return object[i];
 			}
 		}
+
+		return nullptr;
 	}
 
-	static GameObject* GetNearestFloor(GameObject* object[MAX_FLOORS], Movable *mv) {
+	static GameObject* GetNearestFloor(GameObject* object[MAX_ELEMENTS], Movable *mv) {
 		GameObject* nearest = nullptr;
 
-		for (int i = MAX_FLOORS - 1; i >= 0; i--) {
+		for (int i = MAX_ELEMENTS - 1; i >= 0; i--) {
 			if (object[i] == nullptr)
 				continue;
 			

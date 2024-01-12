@@ -30,7 +30,7 @@ public:
 	}
 
 	~GameObject() {
-		sprite = nullptr;
+		//sprite = nullptr;
 	}
 
 	// setters
@@ -39,13 +39,13 @@ public:
 		this->height = height;
 	}
 
-	void setPosition(double x, double y) {
-		setPositionX(x);
-		setPositionY(y);
+	void setPosition(double x, double y, int limit = 0) {
+		setPositionX(x, limit);
+		setPositionY(y, limit);
 	}
 
-	bool setPositionX(double x) {
-		if (x < GAME_BEG_X || x + this->width >= GAME_END_X) {
+	bool setPositionX(double x, int limit = 0) {
+		if (limit && (x < GAME_BEG_X || x + this->width >= GAME_END_X)) {
 			printf("ERROR: Trying to set position X off screen.\n");
 			return false;
 		}
@@ -54,8 +54,8 @@ public:
 		return true;
 	}
 
-	bool setPositionY(double y) {
-		if (y < GAME_BEG_Y || y + this->height >= GAME_END_Y) {
+	bool setPositionY(double y, int limit = 0) {
+		if (limit && (y < 0 || y + this->height >= GAME_END_Y)) {
 			printf("ERROR: Trying to set position Y off screen.\n");
 			return false;
 		}
@@ -96,7 +96,7 @@ public:
 	}
 
 	double getBeginningAxisY() {
-		return this->y;
+    	return this->y;
 	}
 
 	double getEndAxisY() {
@@ -120,7 +120,7 @@ public:
 
 	void printOnScreen(SDL_Surface *screen) {
 		SDL_Rect destination;
-	
+
 		for (int y = 0; y < this->height; y += this->sprite->h) {
 			for (int x = 0; x < this->width; x += this->sprite->w) {
 				destination.x = this->x + x;
