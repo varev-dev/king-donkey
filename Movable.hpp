@@ -51,39 +51,38 @@ public:
 		return this->ladder;
 	}
 
-	void move(int direction, double distance) {
+	void move(int direction, double distance, int limit = 1) {
 		switch (direction) {
 			case LEFT:
 				if (floor->getBeginningAxisX() > (int)(this->getEndAxisX() - distance))
 					setState(FALL_STATE);
 
-				this->setPositionX(this->getBeginningAxisX() - distance);
+				this->setPositionX(this->getBeginningAxisX() - distance, limit);
 				break;
 			case RIGHT:
 				if (floor->getEndAxisX() < this->getBeginningAxisX() + distance)
 					setState(FALL_STATE);
 
-				this->setPositionX(this->getBeginningAxisX() + distance);
+				this->setPositionX(this->getBeginningAxisX() + distance, limit);
 				break;
 			case UP:
 				if (this->getBeginningAxisY() - distance > ladder->getBeginningAxisY() - this->height) {
-					this->setPositionY(this->getBeginningAxisY() - distance);
-					this->setPositionX(ladder->getBeginningAxisX() - (this->getWidth() - ladder->getWidth()) / 2);
+					this->setPositionY(this->getBeginningAxisY() - distance, limit);
+					this->setPositionX(ladder->getBeginningAxisX() - (this->getWidth() - ladder->getWidth()) / 2, limit);
 				} else
-					this->setPositionY(ladder->getBeginningAxisY() - this->height);
+					this->setPositionY(ladder->getBeginningAxisY() - this->height, limit);
 				break;
 			case DOWN:
 				if (this->getEndAxisY() + distance < ladder->getEndAxisY()) {
-					this->setPositionX(ladder->getBeginningAxisX() - (this->getWidth() - ladder->getWidth()) / 2);
-					this->setPositionY(this->getBeginningAxisY() + distance);
+					this->setPositionX(ladder->getBeginningAxisX() - (this->getWidth() - ladder->getWidth()) / 2, limit);
+					this->setPositionY(this->getBeginningAxisY() + distance, limit);
 				} else
-					this->setPositionY(ladder->getEndAxisY() - this->height);
+					this->setPositionY(ladder->getEndAxisY() - this->height, limit);
 				break;
 		}
 	}
 
-	// TO-DO
-	void jump(double distance, double startPosition[2]) {
+	void jump(double distance, double startPosition[2], int limit = 1) {
 		double y1 = this->getEndAxisY() - startPosition[Y_AXIS] + this->height,
 			x1 = this->getBeginningAxisX() - startPosition[X_AXIS];
 
@@ -105,8 +104,8 @@ public:
 		} else {
 			newY = this->getBeginningAxisY() - distance * sin(M_PI/3);
 
-			if (newY <= startPosition[Y_AXIS] - JUMP_HEIGHT) {
-				newY = startPosition[Y_AXIS] - JUMP_HEIGHT;
+			if (newY <= startPosition[Y_AXIS] - JUMP_HEIGHT * 4/3) {
+				newY = startPosition[Y_AXIS] - JUMP_HEIGHT * 4/3;
 				setState(FALL_STATE);
 			}
 		}
@@ -116,22 +115,22 @@ public:
 			setState(DEFAULT_STATE);
 		}
 
-		if (!this->setPositionX(newX))
+		if (!this->setPositionX(newX, limit))
 			setState(FALL_STATE);
-		if (!this->setPositionY(newY))
+		if (!this->setPositionY(newY, limit))
 			setState(FALL_STATE);
 	}
 
-	void fall(double distance, GameObject *floor) {
+	void fall(double distance, GameObject *floor, int limit = 1) {
 		int direction = this->getDirection(X_AXIS);
 		if (direction != UNDEF)
-			setPositionX(getBeginningAxisX() - (direction == LEFT ? 1 : -1) * distance / 3);
+			setPositionX(getBeginningAxisX() - (direction == LEFT ? 1 : -1) * distance / 3, limit);
 
 		if (this->getEndAxisY() + distance > floor->getBeginningAxisY()) {
-			this->setPositionY(floor->getBeginningAxisY() - this->getHeight());
+			this->setPositionY(floor->getBeginningAxisY() - this->getHeight(), limit);
 			this->setState(DEFAULT_STATE);
 		} else {
-			this->setPositionY(this->getBeginningAxisY() + distance * sin(M_PI / 2));
+			this->setPositionY(this->getBeginningAxisY() + distance * sin(M_PI / 2), limit);
 		}
 	}
 
