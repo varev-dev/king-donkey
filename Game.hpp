@@ -68,6 +68,7 @@ public:
 
 			sdl_refresh();
 
+			level->updateBarrel(gameTime);
 			level->setCurrentColliders(level->player);
 			//level.setCurrentColliders(level.barrel);
 
@@ -135,8 +136,10 @@ private:
 
 		level->player->printOnScreen(screen);
 		level->spawner->printOnScreen(screen);
-		/*if (barrel != nullptr)
-			barrel->printOnScreen(screen);*/
+
+		for (int i = 0; i < level->barrels_ctr; i++) {
+			level->barrels[i]->printOnScreen(screen);
+		}
 
 		for (GameObject* go : level->floors) {
 			if (go == nullptr)

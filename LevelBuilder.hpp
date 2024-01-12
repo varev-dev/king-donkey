@@ -45,6 +45,8 @@ public:
 	void setUpLevel(int level) {
 		resetLevel();
 
+		lastSpawnTime = 0;
+
 		player = new Movable(s_character,
 			(SCREEN_WIDTH - s_character->w) / 2, GAME_END_Y - s_character->h - s_platform->h);
 
@@ -94,6 +96,26 @@ public:
 			return;
 
 		createBarrel();
+	}
+
+	void createBarrel() {
+		barrels[barrels_ctr++] = new Movable(s_barrel, spawner->getCenterOfAxisX(), spawner->getEndAxisY() - s_barrel->h);
+	}
+
+	void removeBarrel(int id) {
+		if (id >= MAX_ELEMENTS || id >= barrels_ctr)
+			return;
+
+		Movable* removed = barrels[id];
+		barrels[id] = nullptr;
+
+		for (int i = id; i < barrels_ctr - 1; i++) {
+			Movable* temp = barrels[i + 1];
+			barrels[i + 1] = nullptr;
+			barrels[i] = temp;
+		}
+
+		barrels_ctr--;
 	}
 
 	bool validateSetup() const  {
@@ -178,17 +200,6 @@ public:
 			}
 			barrels[i] = nullptr;
 		}*/
-	}
-
-	void createBarrel() {
-		barrels[barrels_ctr++] = new Movable(s_barrel, spawner->getCenterOfAxisX(), spawner->getEndAxisY() - s_barrel->h);
-	}
-
-	void removeBarrel(int id) {
-		if (id >= MAX_ELEMENTS || id >= barrels_ctr)
-			return;
-
-
 	}
 
 	void createMainFloor(int type = SAND) {
