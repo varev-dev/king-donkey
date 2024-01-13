@@ -49,7 +49,7 @@ public:
 
 	GameObject *getLadder() {
 		return this->ladder;
-	}
+	} 
 
 	void move(int direction, double distance, int limit = 1) {
 		switch (direction) {

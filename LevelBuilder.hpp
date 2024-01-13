@@ -10,7 +10,7 @@ class Level {
 public:
 	SDL_Surface* s_platform, * s_ladder, * s_character, * s_sand, * s_wood, * s_rotten, * s_footbridge, * s_barrel, * s_boss;
 	GameObject* floors[MAX_ELEMENTS], * ladders[MAX_ELEMENTS], * finishObject, * currentLadder, * currentFloor, * spawner;
-	Movable* player, * barrels[MAX_ELEMENTS];
+	Movable* player, * barrels[MAX_ELEMENTS/2];
 	int floors_ctr, ladders_ctr, barrels_ctr;
 	double lastSpawnTime;
 
@@ -34,7 +34,9 @@ public:
 		for (int i = 0; i < MAX_ELEMENTS; i++) {
 			floors[i] = nullptr;
 			ladders[i] = nullptr;
-			barrels[i] = nullptr;
+
+			if (i < MAX_ELEMENTS / 2);
+				barrels[i] = nullptr;
 		}
 	}
 
@@ -88,7 +90,21 @@ public:
 		}
 	}
 
-	void updateBarrel(double currentTime) {
+	void updateBarrels(double currentTime) {
+		for (int i = 0; i < barrels_ctr; i++) {
+			if (barrels[i]->getFloor() != floors[0])
+				continue;
+
+			double finalX = FINISH_DIRECTION == LEFT ? GAME_BEG_X : GAME_END_X - s_barrel->w;
+
+			if (barrels[i]->getBeginningAxisX() > 0)
+				continue;
+			if (barrels[i]->getEndAxisX() < SCREEN_WIDTH)
+				continue;
+
+			removeBarrel(i);
+		}
+
 		if (lastSpawnTime + SPAWN_DELAY / 1000.0 > currentTime)
 			return;
 
@@ -96,6 +112,7 @@ public:
 			return;
 
 		createBarrel();
+		lastSpawnTime = currentTime;
 	}
 
 	void createBarrel() {
@@ -200,6 +217,16 @@ public:
 			}
 			barrels[i] = nullptr;
 		}*/
+
+		SDL_FreeSurface(s_barrel);
+		SDL_FreeSurface(s_boss);
+		SDL_FreeSurface(s_character);
+		SDL_FreeSurface(s_footbridge);
+		SDL_FreeSurface(s_ladder);
+		SDL_FreeSurface(s_platform);
+		SDL_FreeSurface(s_rotten);
+		SDL_FreeSurface(s_sand);
+		SDL_FreeSurface(s_wood);
 	}
 
 	void createMainFloor(int type = SAND) {
@@ -274,9 +301,9 @@ public:
 
 private:
 	void roundWidthAndHeight(int *width, int *height, int srf_w, int srf_h) {
-		if (width != nullptr && *width % srf_w)
+		if (width != nullptr && srf_w != 0 && *width % srf_w)
 			*width -= *width % srf_w;
-		if (height != nullptr && *height % srf_h)
+		if (height != nullptr && srf_h != 0 && *height % srf_h)
 			*height -= *height % srf_h;
 	}
 

@@ -4,6 +4,7 @@
 #include "SDL_Utils.hpp"
 #include "DEFINED_VALUES.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -37,7 +38,7 @@ public:
 	}
 
 	~Game() {
-		SDL_RenderClear(renderer);
+		//delete(level);
 	}
 
 	bool init() {
@@ -68,13 +69,12 @@ public:
 
 			sdl_refresh();
 
-			level->updateBarrel(gameTime);
+			level->updateBarrels(gameTime);
 			level->setCurrentColliders(level->player);
-			//level.setCurrentColliders(level.barrel);
 
 			SDL_PollEvent(&event);
 			handleEvents(event);
-			//barrelEvents(barrel);
+			iterateBarrelsToHandleEvents();
 
 			movement();
 			//barrelMovement(barrel);
@@ -201,8 +201,19 @@ private:
 		}
 	}
 
-	void barrelEvents(Movable* barrel) {
-		if (barrel->getFloor()->getBeginningAxisY() != barrel->getEndAxisY() && barrel->getLadder() == nullptr) {
+	void iterateBarrelsToHandleEvents() {
+		for (int i = 0; i < level->barrels_ctr; i++) {
+			level->setCurrentColliders(level->barrels[i]);
+			barrelEvent(level->barrels[i]);
+			movement(level->barrels[i], 1, ALLOW_FALL);
+		}
+	}
+
+	// TO-DO anti ladder glitch
+	// TO-DO fall limited by ALLOW_FALL
+	// TO-DO 
+	void barrelEvent(Movable* barrel) {
+		if (barrel->getFloor() != nullptr && barrel->getFloor()->getBeginningAxisY() != barrel->getEndAxisY()) {
 			barrel->setState(FALL_STATE);
 			return;
 		}
@@ -210,69 +221,88 @@ private:
 		barrel->setState(DEFAULT_STATE);
 		int random = rand() % 2;
 
-		int floorAvailable = barrel->getFloor() != level->floors[0];
-		int ladderAvailable = barrel->getLadder() != nullptr;
+		bool floorAvailable = barrel->getFloor() != nullptr && barrel->getEndAxisY() == barrel->getFloor()->getBeginningAxisY(), 
+			ladderAvailable = barrel->getLadder() != nullptr && level->finishObject != barrel->getLadder();
+		bool endOfFloor = 0, endOfLadder = 0;
+		int x_dir = barrel->getDirection(X_AXIS), y_dir = barrel->getDirection(Y_AXIS);
 
-		if (ladderAvailable && ALWAYS_DOWN && barrel->getEndAxisY() != barrel->getLadder()->getEndAxisY()) {
-			barrel->setDirection(DOWN, PRESSED);
-			barrel->setDirection(barrel->getDirection(X_AXIS), RELEASED);
-			return;
+		if (floorAvailable && barrel->getEndAxisY() == barrel->getFloor()->getBeginningAxisY())
+			endOfFloor = barrel->getBeginningAxisX() <= fmin(barrel->getFloor()->getBeginningAxisX(), 0) || 
+						barrel->getEndAxisX() >= fmax(barrel->getFloor()->getEndAxisX(), SCREEN_WIDTH);
+
+		if (endOfFloor) {
+			if (ALLOW_FALL && random == 1) {
+				
+			} else {
+				int direction = barrel->getDirection(X_AXIS);
+				barrel->setDirection(direction, RELEASED);
+				barrel->setDirection(direction == LEFT ? RIGHT : LEFT, PRESSED);
+				return;
+			}
 		}
+		if (endOfFloor)
+			printf("%d", endOfFloor);
+		if (ladderAvailable)
+			endOfLadder = barrel->getEndAxisY() == barrel->getLadder()->getEndAxisY() || 
+			barrel->getEndAxisY() == barrel->getLadder()->getBeginningAxisY();
 
-		if (barrel->getDirection(X_AXIS) == UNDEF) {
-			if (barrel->getFloor() == level->floors[0])
-				barrel->setDirection(FINISH_DIRECTION, PRESSED);
-			else
-				barrel->setDirection(random ? LEFT : RIGHT, PRESSED);
+		if (endOfLadder)
+			barrel->setDirection(barrel->getDirection(Y_AXIS), RELEASED);
+
+		if (floorAvailable && ladderAvailable) {
+			if (random) {
+				setBarrelDirectionOnX(barrel);
+			} else if (endOfLadder && y_dir == UNDEF) {
+				setBarrelDirectionOnY(barrel);
+			}
+		} else if (floorAvailable && barrel->getEndAxisY() == barrel->getFloor()->getBeginningAxisY()) {
+			setBarrelDirectionOnX(barrel);
+		} else if (ladderAvailable && endOfLadder) {
+			setBarrelDirectionOnY(barrel);
 		}
-
-		if ((barrel->getFloor() != level->floors[0] && barrel->getBeginningAxisX() == barrel->getFloor()->getBeginningAxisX()) ||
-			barrel->getEndAxisX() == barrel->getFloor()->getEndAxisX()) {
-			int direction = barrel->getDirection(X_AXIS);
-			barrel->setDirection(direction, RELEASED);
-			barrel->setDirection(direction == LEFT ? RIGHT : LEFT, PRESSED);
-		}
-
-		if (barrel->getLadder() == nullptr) 
-			return;
-	
-		random = rand() % 2;
-		if (barrel->getDirection(Y_AXIS) == UNDEF) {
-			if (random == 1)
-				barrel->setDirection(DOWN, PRESSED);
-			else
-				barrel->setDirection(UP, PRESSED);
-		}
-
-		if (barrel->getEndAxisY() == barrel->getLadder()->getBeginningAxisY()) {
-			int direction = barrel->getDirection(Y_AXIS);
-			barrel->setDirection(direction, RELEASED);
-		}
-
-		/*if(barrel->getLadder() != nullptr && barrel->getLadder()->getBeginningAxisY() != barrel->getEndAxisY()) {
-			barrel->setDirection(DOWN, PRESSED);
-			return;
-		} else {
-			barrel->setDirection(DOWN, RELEASED);
-		}*/
 	}
 
-	void barrelMovement(Movable* barrel) {
-		if (barrel->getState() == FALL_STATE) {
+	void setBarrelDirectionOnX(Movable* mv) {
+		int random = rand() % 2;
+		if (mv->getDirection(X_AXIS) == UNDEF) {
+			if (FORCE_FINISH && mv->getFloor() == level->floors[0]) {
+				mv->setDirection(FINISH_DIRECTION, PRESSED);
+			} else {
+				mv->setDirection(random ? LEFT : RIGHT, PRESSED);
+			}
+		}
+	}
+
+	void setBarrelDirectionOnY(Movable* mv) {
+		int random = rand() % 2;
+
+		if (ALWAYS_DOWN) {
+			mv->setDirection(DOWN, PRESSED);
+		} else {
+			mv->setDirection(random ? UP : DOWN, PRESSED);
+		}
+
+		mv->setDirection(mv->getDirection(X_AXIS), RELEASED);
+	}
+
+	void movement(Movable* mv, double speed = 1, int limit = 1) {
+		if (mv->getState() == JUMP_STATE) {
+			// JUMP
+			mv->setFloor(Collider::GetNearestFloor(level->floors, mv));
+			mv->jump(delta * speed * JUMP_SPEED, mv->getJumpPosition(), limit);
+		}
+		else if (mv->getState() == FALL_STATE) {
 			// FALL
-			barrel->fall(delta * FALL_SPEED, Collider::GetNearestFloor(level->floors, barrel));
+			mv->fall(delta * speed * FALL_SPEED, Collider::GetNearestFloor(level->floors, mv), limit);
 		}
-		else if (barrel->getState() == DEFAULT_STATE) {
+		else if (mv->getState() == DEFAULT_STATE) {
 			// CLIMB
-			if (barrel->getLadder() != nullptr && Collider::IsMovePossibleOnAxisY(*barrel->getLadder(), *barrel))
-				barrel->move(barrel->getDirection(Y_AXIS), delta * CLIMB_SPEED);
+			if (mv->getLadder() != nullptr && Collider::IsMovePossibleOnAxisY(*mv->getLadder(), *mv))
+				mv->move(mv->getDirection(Y_AXIS), delta * speed * CLIMB_SPEED, limit);
 			// WALK
-			if (Collider::IsMovePossibleOnAxisX(*barrel->getFloor(), *barrel))
-				barrel->move(barrel->getDirection(X_AXIS), delta * MOVE_SPEED, 0);
+			if (Collider::IsMovePossibleOnAxisX(*mv->getFloor(), *mv))
+				mv->move(mv->getDirection(X_AXIS), delta * speed * MOVE_SPEED, limit);
 		}
-		
-		if (barrel->getFloor() == level->floors[0] && barrel->getBeginningAxisX() == 0)
-			barrel = nullptr;
 	}
 
 	void printBorder() {

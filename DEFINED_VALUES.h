@@ -15,8 +15,6 @@
 
 // 
 #define MAX_ELEMENTS 16
-#define MAX_LADDERS 7
-#define MAX_FLOORS 7
 
 #define SAND 0
 #define PLANKS 1
@@ -40,6 +38,7 @@
 // barrel config
 #define ALWAYS_DOWN 1
 #define ALLOW_FALL 0
+#define FORCE_FINISH 1
 #define FINISH_DIRECTION LEFT
 #define SPAWN_DELAY 3000 // in ms
 
