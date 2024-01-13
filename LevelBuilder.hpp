@@ -25,23 +25,20 @@ public:
 		s_barrel = SDL_LoadBMP("./bmp/barrel24x24.bmp");
 		s_boss = SDL_LoadBMP("./bmp/boss64x64.bmp");
 
-		finishObject = nullptr;
-		currentLadder = nullptr;
-		currentFloor = nullptr;
-
-		floors_ctr = ladders_ctr = barrels_ctr = lastSpawnTime = 0;
-
-		for (int i = 0; i < MAX_ELEMENTS; i++) {
-			floors[i] = nullptr;
-			ladders[i] = nullptr;
-
-			if (i < MAX_ELEMENTS / 2);
-				barrels[i] = nullptr;
-		}
+		resetLevel();
 	}
 
 	~Level() {
 		resetLevel();
+		SDL_FreeSurface(s_barrel);
+		SDL_FreeSurface(s_boss);
+		SDL_FreeSurface(s_character);
+		SDL_FreeSurface(s_footbridge);
+		SDL_FreeSurface(s_ladder);
+		SDL_FreeSurface(s_platform);
+		SDL_FreeSurface(s_rotten);
+		SDL_FreeSurface(s_sand);
+		SDL_FreeSurface(s_wood);
 	}
 
 	void setUpLevel(int level) {
@@ -97,9 +94,9 @@ public:
 
 			double finalX = FINISH_DIRECTION == LEFT ? GAME_BEG_X : GAME_END_X - s_barrel->w;
 
-			if (barrels[i]->getBeginningAxisX() > 0)
+			if (barrels[i]->getBeginningAxisX() > GAME_BEG_X)
 				continue;
-			if (barrels[i]->getEndAxisX() < SCREEN_WIDTH)
+			if (barrels[i]->getEndAxisX() < GAME_END_X)
 				continue;
 
 			removeBarrel(i);
@@ -108,7 +105,7 @@ public:
 		if (lastSpawnTime + SPAWN_DELAY / 1000.0 > currentTime)
 			return;
 
-		if (barrels_ctr == MAX_ELEMENTS)
+		if (barrels_ctr == MAX_ELEMENTS / 2)
 			return;
 
 		createBarrel();
@@ -189,44 +186,21 @@ public:
 		
 		currentLadder = nullptr;
 		currentFloor = nullptr;
+		finishObject = nullptr;
 
-		/*if (player != nullptr)
-			delete(player);
 		player = nullptr;
 
 		for (int i = 0; i < MAX_ELEMENTS; i++) {
-			if (floors[i] != nullptr) {
-				delete(floors[i]);
-				continue;
-			}
 			floors[i] = nullptr;
 		}
 
 		for (int i = 0; i < MAX_ELEMENTS; i++) {
-			if (ladders[i] != nullptr) {
-				delete(ladders[i]);
-				continue;
-			}
 			ladders[i] = nullptr;
 		}
 
-		for (int i = 0; i < MAX_ELEMENTS; i++) {
-			if (barrels[i] != nullptr) {
-				delete(barrels[i]);
-				continue;
-			}
+		for (int i = 0; i < MAX_ELEMENTS / 2; i++) {
 			barrels[i] = nullptr;
-		}*/
-
-		SDL_FreeSurface(s_barrel);
-		SDL_FreeSurface(s_boss);
-		SDL_FreeSurface(s_character);
-		SDL_FreeSurface(s_footbridge);
-		SDL_FreeSurface(s_ladder);
-		SDL_FreeSurface(s_platform);
-		SDL_FreeSurface(s_rotten);
-		SDL_FreeSurface(s_sand);
-		SDL_FreeSurface(s_wood);
+		}
 	}
 
 	void createMainFloor(int type = SAND) {

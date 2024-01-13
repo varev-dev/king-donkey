@@ -38,7 +38,9 @@ public:
 	}
 
 	~Game() {
-		//delete(level);
+		SDL_RenderClear(renderer);
+		delete(level);
+		SDL_FreeSurface(charset);
 	}
 
 	bool init() {
@@ -74,10 +76,10 @@ public:
 
 			SDL_PollEvent(&event);
 			handleEvents(event);
+
 			iterateBarrelsToHandleEvents();
 
 			movement();
-			//barrelMovement(barrel);
 
 			frames++;
 		}
@@ -227,8 +229,8 @@ private:
 		int x_dir = barrel->getDirection(X_AXIS), y_dir = barrel->getDirection(Y_AXIS);
 
 		if (floorAvailable && barrel->getEndAxisY() == barrel->getFloor()->getBeginningAxisY())
-			endOfFloor = barrel->getBeginningAxisX() <= fmin(barrel->getFloor()->getBeginningAxisX(), 0) || 
-						barrel->getEndAxisX() >= fmax(barrel->getFloor()->getEndAxisX(), SCREEN_WIDTH);
+			endOfFloor = barrel->getBeginningAxisX() <= fmin(barrel->getFloor()->getBeginningAxisX(), GAME_BEG_X) || 
+						barrel->getEndAxisX() >= fmax(barrel->getFloor()->getEndAxisX(), GAME_END_X);
 
 		if (endOfFloor) {
 			if (ALLOW_FALL && random == 1) {

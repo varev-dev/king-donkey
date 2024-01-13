@@ -65,6 +65,11 @@ public:
 	}
 
 	void setSprite(SDL_Surface* sprite) {
+		if (sprite == nullptr) {
+			this->sprite = nullptr;
+			return;
+		}
+
 		if (sprite->w > this->width || sprite->h > this->height) {
 			printf("ERROR: The sprite is larger than the object itself.");
 			return;
