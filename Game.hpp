@@ -63,7 +63,6 @@ public:
 
 		while (!quit) {
 			workWithDelta();
-
 			// render objects -> borders -> info
 			SDL_FillRect(screen, NULL, black);
 			printObjects();
@@ -208,65 +207,59 @@ private:
 		for (int i = 0; i < level->barrels_ctr; i++) {
 			level->setCurrentColliders(level->barrels[i]);
 			barrelEvent(level->barrels[i]);
-			movement(level->barrels[i], 1, ALLOW_FALL);
+			movement(level->barrels[i], 1, 0);
 		}
 	}
 
-	// TO-DO anti ladder glitch
-	// TO-DO fall limited by ALLOW_FALL
-	// TO-DO fix switching floors
 	void barrelEvent(Movable* barrel) {
-		if (barrel->getFloor() != nullptr && barrel->getFloor()->getBeginningAxisY() != barrel->getEndAxisY()) {
+		if (barrel->getFloor() != nullptr && barrel->getFloor()->getBeginningAxisY() != barrel->getEndAxisY() && barrel->getDirection(Y_AXIS) == UNDEF) {
 			barrel->setState(FALL_STATE);
 			return;
 		}
 
 		if (barrel->getEndAxisY() == level->floors[0]->getBeginningAxisY()) {
 			setBarrelDirectionOnX(barrel);
+			barrel->setState(DEFAULT_STATE);
 			return;
 		}
 
-		barrel->setState(DEFAULT_STATE);
-		int random = rand() % 2;
+		int random = rand() % 2 == 1;
 
 		bool floorAvailable = barrel->getFloor() != nullptr && barrel->getEndAxisY() == barrel->getFloor()->getBeginningAxisY(), 
-			ladderAvailable = barrel->getLadder() != nullptr && level->finishObject != barrel->getLadder();
-		bool endOfFloor = 0, endOfLadder = 0;
-		int x_dir = barrel->getDirection(X_AXIS), y_dir = barrel->getDirection(Y_AXIS);
+			ladderAvailable = ALLOW_CLIMB_DOWN && barrel->getLadder() != nullptr && level->finishObject != barrel->getLadder() && barrel->getEndAxisY() == barrel->getLadder()->getBeginningAxisY();
+		bool endOfFloor = 0, endOfFloorIsEndOfView, endOfLadder = 0;
 
-		if (floorAvailable && barrel->getEndAxisY() == barrel->getFloor()->getBeginningAxisY()) {
-			endOfFloor = barrel->getBeginningAxisX() <= fmax(barrel->getFloor()->getBeginningAxisX(), GAME_BEG_X) ||
-				barrel->getEndAxisX() >= fmin(barrel->getFloor()->getEndAxisX(), GAME_END_X);
+		if (floorAvailable) {
+			endOfFloor = barrel->getBeginningAxisX() - distance <= fmax(barrel->getFloor()->getBeginningAxisX(), GAME_BEG_X) ||
+						barrel->getEndAxisX() + distance >= fmin(barrel->getFloor()->getEndAxisX(), GAME_END_X);
+			endOfFloorIsEndOfView = barrel->getFloor()->getEndAxisX() >= GAME_END_X || barrel->getFloor()->getBeginningAxisX() <= GAME_BEG_X;
 		}
+
 
 		if (endOfFloor) {
-			if (ALLOW_FALL && random == 1) {
-				
-			} else {
-				int direction = barrel->getDirection(X_AXIS);
-				barrel->setDirection(direction, RELEASED);
-				barrel->setDirection(direction == LEFT ? RIGHT : LEFT, PRESSED);
-				return;
+			int mode = barrel->getBeginningAxisX() - distance <= fmax(barrel->getFloor()->getBeginningAxisX(), GAME_BEG_X) ? BEG_MODE : END_MODE;
+
+			if (!Collider::IsFloorExtended(level->floors, barrel->getFloor(), mode) && (!ALLOW_FALL || endOfFloorIsEndOfView)) {
+				barrel->switchDirection(X_AXIS);
 			}
+
+		}
+		else if (barrel->getDirection(X_AXIS) == UNDEF) {
+			setBarrelDirectionOnX(barrel);
+			barrel->setState(DEFAULT_STATE);
 		}
 
-		if (ladderAvailable)
+		if (ladderAvailable && 
+				barrel->getCenterOfAxisX() < barrel->getLadder()->getCenterOfAxisX() + distance && 
+				barrel->getCenterOfAxisX() > barrel->getLadder()->getCenterOfAxisX() - distance)
 			endOfLadder = barrel->getEndAxisY() == barrel->getLadder()->getBeginningAxisY();
 
-		if (endOfLadder)
+		if (barrel->getLadder() != nullptr && barrel->getEndAxisY() == barrel->getLadder()->getEndAxisY()) {
 			barrel->setDirection(barrel->getDirection(Y_AXIS), RELEASED);
-
-		if (floorAvailable && ladderAvailable) {
-			if (random) {
-				setBarrelDirectionOnX(barrel);
-			} else if (endOfLadder && y_dir == UNDEF) {
-				setBarrelDirectionOnY(barrel);
-			}
-		} else if (floorAvailable && barrel->getEndAxisY() == barrel->getFloor()->getBeginningAxisY()) {
-			setBarrelDirectionOnX(barrel);
-		} else if (ladderAvailable && endOfLadder) {
-			setBarrelDirectionOnY(barrel);
 		}
+
+		if (endOfLadder && random)
+			setBarrelDirectionOnY(barrel);
 	}
 
 	void setBarrelDirectionOnX(Movable* mv) {
