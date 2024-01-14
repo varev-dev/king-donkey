@@ -59,13 +59,21 @@ public:
 
 	void start() {
 		SDL_Event event;
-		level->setUpLevel(1);
+		currentLevel = 1;
+		level->setUpLevel(currentLevel);
 
 		while (!quit) {
-			workWithDelta();
 			// render objects -> borders -> info
 			SDL_FillRect(screen, NULL, black);
-			printObjects();
+
+			if (currentLevel <= MAX_LEVEL) {
+				printObjects();
+				workWithDelta();
+			} else {
+				printWon();
+				playing = 0;
+			}
+
 			printBorder();
 			printInformation();
 			sdl_refresh();
@@ -76,6 +84,13 @@ public:
 				continue;
 
 			if (playing) {
+				if (level->checkIsPlayerOnFinish()) {
+					currentLevel <= MAX_LEVEL ? currentLevel++ : 0;
+					level->setUpLevel(currentLevel);
+					sdl_refresh();
+					continue;
+				}
+
 				level->updateBarrels(gameTime);
 				level->setCurrentColliders(level->player);
 				movement();
@@ -96,7 +111,7 @@ private:
 	Level* level;
 
 	// Utils
-	int tick1, tick2, quit, frames;
+	int tick1, tick2, quit, frames, currentLevel;
 	double delta, gameTime, fpsTimer, fps, distance, mv_speed;
 	bool playing;
 
@@ -168,16 +183,31 @@ private:
 		case SDL_KEYDOWN:
 			if (key == KEY_ESCAPE) {
 				quit = 1;
-			} else if (key == KEY_CONTINUE || key == KEY_RESET) {
+			} else if ((key == KEY_CONTINUE && !playing && currentLevel <= MAX_LEVEL) || key == KEY_RESET) {
 				playing = true;
-				level->setUpLevel(1);
-				gameTime = 0;
+				level->setUpLevel(key == KEY_RESET ? 1 : currentLevel);
+				if (key == KEY_RESET) {
+					gameTime = 0;
+					currentLevel = 1;
+				}
 				return true;
 			} else if (moveKey && level->player->getState() == DEFAULT_STATE) {
 				level->player->setDirection(key, PRESSED);
 			} else if (key == KEY_JUMP && level->player->getState() == DEFAULT_STATE && level->player->getFloor() != nullptr) {
 				level->player->setJumpDirection(level->player->getDirection(X_AXIS));
 				level->player->setState(JUMP_STATE);
+			} else if (key == SDLK_1) {
+				currentLevel = 1;
+				level->setUpLevel(currentLevel);
+				sdl_refresh();
+			} else if (key == SDLK_2) {
+				currentLevel = 2;
+				level->setUpLevel(currentLevel);
+				sdl_refresh();
+			} else if (key == SDLK_3) {
+				currentLevel = 3;
+				level->setUpLevel(currentLevel);
+				sdl_refresh();
 			}
 			break;
 		case SDL_KEYUP:
@@ -214,7 +244,7 @@ private:
 		for (int i = 0; i < level->barrels_ctr; i++) {
 			level->setCurrentColliders(level->barrels[i]);
 			barrelEvent(level->barrels[i]);
-			movement(level->barrels[i], 1, 0);
+			movement(level->barrels[i], 1 + currentLevel / MAX_LEVEL, 0);
 			if (Collider::CollisionBetweenMovables(level->player, level->barrels[i]))
 				playing = false;
 		}
@@ -336,8 +366,17 @@ private:
 		char text[128];
 		sprintf(text, "Donkey Kong");
 		SDL_Utils::DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 12, text, charset);
-		sprintf(text, "In game time = %.1lf s, %.0lf fps", gameTime, fps);
+		sprintf(text, "In game time: %.1lf s", gameTime);
 		SDL_Utils::DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 28, text, charset);
+		sprintf(text, " %.0lf fps", fps);
+		SDL_Utils::DrawString(screen, screen->w - strlen(text) * 8, 0, text, charset);
+		sprintf(text, "Author: S198020");
+		SDL_Utils::DrawString(screen, 0, 0, text, charset);
 	}
 
+	void printWon() {
+		char text[128];
+		sprintf(text, "You won, in %.1lf seconds!", gameTime);
+		SDL_Utils::DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, INFO_BAR_SIZE + (GAME_END_Y - GAME_BEG_Y) / 2, text, charset);
+	}
 };
