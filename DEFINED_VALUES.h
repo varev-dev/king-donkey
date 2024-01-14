@@ -64,3 +64,4 @@ extern "C" {
 #define KEY_JUMP SDLK_SPACE
 #define KEY_ESCAPE SDLK_ESCAPE
 #define KEY_RESET SDLK_n
+#define KEY_CONTINUE SDLK_p

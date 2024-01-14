@@ -62,8 +62,8 @@ public:
 			// second lv
 			addFloor(0, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 96, ROTTEN);
 			addFloor(120 + JUMP_WIDTH, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 160, PLANKS);
-			addFloor(floors[5]->getEndAxisX() - GAME_BEG_X, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 96, FOOTBRIDGE);
-			addFloor(floors[6]->getEndAxisX() - GAME_BEG_X, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 256, PLANKS);
+			addFloor(120 + JUMP_WIDTH + 160, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 96, FOOTBRIDGE);
+			addFloor(120 + JUMP_WIDTH + 160 + 96, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 256, PLANKS);
 			
 			// third lv
 			addFloor(48, floors[0]->getHeight() + FLOOR_HEIGHT * 3, 72, ROTTEN);
@@ -270,7 +270,6 @@ public:
 			movable->setFloor(floors[0]);
 
 		movable->setLadder(Collider::GetCollider(ladders, movable, LADDER));
-
 	}
 
 private:

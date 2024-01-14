@@ -70,17 +70,19 @@ public:
 			printInformation();
 			sdl_refresh();
 
-			level->updateBarrels(gameTime);
-			level->setCurrentColliders(level->player);
-
 			// player input
 			SDL_PollEvent(&event);
 			if (handleEvents(event))
 				continue;
-			movement();
 
-			// barrel
-			iterateBarrelsToHandleEvents();
+			if (playing) {
+				level->updateBarrels(gameTime);
+				level->setCurrentColliders(level->player);
+				movement();
+
+				// barrel
+				iterateBarrelsToHandleEvents();
+			}
 
 			frames++;
 		}
@@ -96,6 +98,7 @@ private:
 	// Utils
 	int tick1, tick2, quit, frames;
 	double delta, gameTime, fpsTimer, fps, distance, mv_speed;
+	bool playing;
 
 	// Colors
 	int black, green, red, blue;
@@ -165,7 +168,8 @@ private:
 		case SDL_KEYDOWN:
 			if (key == KEY_ESCAPE) {
 				quit = 1;
-			} else if (key == KEY_RESET) {
+			} else if (key == KEY_CONTINUE || key == KEY_RESET) {
+				playing = true;
 				level->setUpLevel(1);
 				gameTime = 0;
 				return true;
@@ -211,6 +215,8 @@ private:
 			level->setCurrentColliders(level->barrels[i]);
 			barrelEvent(level->barrels[i]);
 			movement(level->barrels[i], 1, 0);
+			if (Collider::CollisionBetweenMovables(level->player, level->barrels[i]))
+				playing = false;
 		}
 	}
 

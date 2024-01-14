@@ -96,6 +96,22 @@ public:
 		return false;
 	}
 
+	static bool CollisionBetweenMovables(Movable *first, Movable *second) {
+		if (first->getBeginningAxisY() > second->getEndAxisY())
+			return false;
+
+		if (first->getEndAxisY() < second->getBeginningAxisY())
+			return false;
+
+		if (first->getBeginningAxisX() > second->getCenterOfAxisX())
+			return false;
+
+		if (first->getEndAxisX() < second->getCenterOfAxisX())
+			return false;
+
+		return true;
+	}
+
 private:
 	static bool FloorExtension(GameObject* current, GameObject* check, int mode) {
 		if (mode != END_MODE && mode != BEG_MODE)
