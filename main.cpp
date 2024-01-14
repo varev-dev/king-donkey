@@ -4,7 +4,7 @@
 #include <time.h>
 
 #include "DEFINED_VALUES.h"
-#include "Game.hpp";
+#include "Game.hpp"
 
 #ifdef __cplusplus
 extern "C"
