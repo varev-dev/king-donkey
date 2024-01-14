@@ -9,7 +9,7 @@ extern "C" {
 class Level {
 public:
 	SDL_Surface* s_platform, * s_ladder, * s_character, * s_sand, * s_wood, * s_rotten, * s_footbridge, * s_barrel, * s_boss;
-	GameObject* floors[MAX_ELEMENTS], * ladders[MAX_ELEMENTS], * finishObject, * currentLadder, * currentFloor, * spawner;
+	GameObject* floors[MAX_ELEMENTS], * ladders[MAX_ELEMENTS], * finishObject, * spawner;
 	Movable* player, * barrels[MAX_ELEMENTS/2];
 	int floors_ctr, ladders_ctr, barrels_ctr;
 	double lastSpawnTime;
@@ -51,40 +51,90 @@ public:
 
 		if (level == 1) {
 			// FLOORS
-			// ground lv
 			createMainFloor();
+			// first lv
+			addFloor(144, floors[0]->getHeight() + FLOOR_HEIGHT, GAME_END_X - GAME_BEG_X - 144, PLANKS);
+			// second lv
+			addFloor(0, floors[0]->getHeight() + FLOOR_HEIGHT * 2, GAME_END_X - GAME_BEG_X - 144, PLANKS);
+			addFloor(GAME_END_X - 72, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 72, ROTTEN);
+			// third lv
+			addFloor(0, floors[0]->getHeight() + FLOOR_HEIGHT * 3, GAME_END_X - GAME_BEG_X, PLANKS);
+
+			// LADDERS
+			addLadder(144 + 32, floors[1]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[2]->getEndAxisX() - 32, floors[2]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[4]->getBeginningAxisX() + 64, floors[4]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[4]->getBeginningAxisX() + 256, floors[4]->getBeginningAxisY(), 1, 1);
+
+			spawner = new GameObject(s_boss, GAME_END_X - 72, floors[4]->getBeginningAxisY() - 64);
+			addLadder(floors[floors_ctr - 1]->getCenterOfAxisX(), floors[floors_ctr - 1]->getBeginningAxisY() - FLOOR_HEIGHT, 2, 1);
+			finishObject = ladders[ladders_ctr - 1];
+		} else if (level == 2) {
+			// FLOORS
+			// ground lv
+			createMainFloor(PLANKS);
 
 			// first lv
-			addFloor(256, floors[0]->getHeight() + FLOOR_HEIGHT, 96, PLANKS);
-			addFloor(256+96, floors[0]->getHeight() + FLOOR_HEIGHT, 64, FOOTBRIDGE);
-			addFloor(256+96+64, floors[0]->getHeight() + FLOOR_HEIGHT, 96, PLANKS);
+			addFloor(256, getFloorHeight(floors[0], 1), 96, PLANKS);
+			addFloor(256 + 96, getFloorHeight(floors[0], 1), 64, FOOTBRIDGE);
+			addFloor(256 + 96 + 64, getFloorHeight(floors[0], 1), 96, PLANKS);
 
 			// second lv
-			addFloor(0, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 96, ROTTEN);
-			addFloor(120 + JUMP_WIDTH, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 160, PLANKS);
-			addFloor(120 + JUMP_WIDTH + 160, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 96, FOOTBRIDGE);
-			addFloor(120 + JUMP_WIDTH + 160 + 96, floors[0]->getHeight() + FLOOR_HEIGHT * 2, 256, PLANKS);
-			
+			addFloor(0, getFloorHeight(floors[0], 2), 96, ROTTEN);
+			addFloor(120 + JUMP_WIDTH, getFloorHeight(floors[0], 2), 160, PLANKS);
+			addFloor(120 + JUMP_WIDTH + 160, getFloorHeight(floors[0], 2), 96, FOOTBRIDGE);
+			addFloor(120 + JUMP_WIDTH + 160 + 96, getFloorHeight(floors[0], 2), 256, PLANKS);
+
 			// third lv
-			addFloor(48, floors[0]->getHeight() + FLOOR_HEIGHT * 3, 72, ROTTEN);
-			addFloor(144 + JUMP_WIDTH * 1/2, floors[0]->getHeight() + FLOOR_HEIGHT * 3, 64, PLANKS);
-			addFloor(144 + JUMP_WIDTH * 1/2 + 64, floors[0]->getHeight() + FLOOR_HEIGHT * 3, 64, FOOTBRIDGE);
-			addFloor(144 + JUMP_WIDTH * 1/2 + 128, floors[0]->getHeight() + FLOOR_HEIGHT * 3, SCREEN_WIDTH, PLANKS);
+			addFloor(48, getFloorHeight(floors[0], 3), 72, ROTTEN);
+			addFloor(144 + JUMP_WIDTH * 1 / 2, getFloorHeight(floors[0], 3), 64, PLANKS);
+			addFloor(144 + JUMP_WIDTH * 1 / 2 + 64, getFloorHeight(floors[0], 3), 64, FOOTBRIDGE);
+			addFloor(144 + JUMP_WIDTH * 1 / 2 + 128, getFloorHeight(floors[0], 3), SCREEN_WIDTH, PLANKS);
 
 			// LADDERS
 			addLadder(floors[1]->getCenterOfAxisX() - 8, floors[1]->getBeginningAxisY(), 1, 1);
 			addLadder(floors[7]->getBeginningAxisX() + 16, floors[7]->getBeginningAxisY(), 1, 1);
 			addLadder(GAME_END_X - 48, floors[7]->getBeginningAxisY(), 2, 2);
 			addLadder(floors[8]->getCenterOfAxisX() - 8, floors[8]->getBeginningAxisY(), 1, 1);
-			//addLadder(floors[9]->getBeginningAxisX() + 24, floors[9]->getBeginningAxisY(), 1, 1);
 			addLadder(floors[11]->getBeginningAxisX() + 32, floors[11]->getBeginningAxisY(), 1, 1);
 
 			// FINISH
 			addLadder(floors[9]->getCenterOfAxisX() - 16, floors[9]->getBeginningAxisY() - FLOOR_HEIGHT, 2, 1);
-			
+
 			spawner = new GameObject(s_boss, GAME_END_X - 72, floors[11]->getBeginningAxisY() - 64);
 			finishObject = ladders[ladders_ctr - 1];
+		} else if (level == 3) {
+			createMainFloor(ROTTEN);
+
+			addFloor(48, getFloorHeight(floors[0], 1), 96, FOOTBRIDGE);
+			addFloor(48+196+JUMP_WIDTH, getFloorHeight(floors[0], 1), 112, FOOTBRIDGE);
+			addFloor(GAME_END_X-64-16, getFloorHeight(floors[0], 1), 64, ROTTEN);
+
+			addFloor(0, getFloorHeight(floors[0], 2), 80, FOOTBRIDGE);
+			addFloor(48 + 64, getFloorHeight(floors[0], 2), 80, FOOTBRIDGE);
+			addFloor(48 + 64 + 80 + JUMP_WIDTH, getFloorHeight(floors[0], 2), 128, ROTTEN);
+			addFloor(GAME_END_X-64-16, getFloorHeight(floors[0], 2), 64, ROTTEN);
+
+			addFloor(96, getFloorHeight(floors[0], 3), GAME_END_X - 96 - 16 - 80, FOOTBRIDGE);
+
+			addFloor(0, getFloorHeight(floors[0], 3.2), 80, SAND);
+
+			addLadder(floors[1]->getCenterOfAxisX() - 16, floors[1]->getBeginningAxisY(), 2, 1);
+			addLadder(floors[1]->getBeginningAxisX() + 8, floors[4]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[1]->getEndAxisX() - 24, floors[5]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[5]->getEndAxisX() - 24, floors[8]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[1]->getEndAxisX() - 24, floors[5]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[7]->getCenterOfAxisX() + 8, floors[7]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[7]->getCenterOfAxisX() - 24, floors[8]->getBeginningAxisY(), 1, 1);
+			addLadder(floors[8]->getBeginningAxisX() + 128, floors[8]->getBeginningAxisY(), 2, 3);
+
+			spawner = new GameObject(s_boss, GAME_END_X - 144, floors[8]->getBeginningAxisY() - 64);
+			finishObject = floors[floors_ctr - 1];
 		}
+	}
+
+	bool checkIsPlayerOnFinish() {
+		return Collider::CollisionBetweenMovableAndObject(*finishObject, *player);
 	}
 
 	void updateBarrels(double currentTime) {
@@ -105,7 +155,7 @@ public:
 		if (lastSpawnTime + SPAWN_DELAY / 1000.0 > currentTime)
 			return;
 
-		if (barrels_ctr == MAX_ELEMENTS / 2)
+		if (barrels_ctr == MAX_BARRELS)
 			return;
 
 		createBarrel();
@@ -117,7 +167,7 @@ public:
 	}
 
 	void removeBarrel(int id) {
-		if (id >= MAX_ELEMENTS || id >= barrels_ctr)
+		if (id >= MAX_BARRELS || id >= barrels_ctr)
 			return;
 
 		Movable* removed = barrels[id];
@@ -183,9 +233,7 @@ public:
 
 	void resetLevel() {
 		floors_ctr = ladders_ctr = barrels_ctr = lastSpawnTime = 0;
-		
-		currentLadder = nullptr;
-		currentFloor = nullptr;
+
 		finishObject = nullptr;
 
 		player = nullptr;
@@ -280,4 +328,7 @@ private:
 			*height -= *height % srf_h;
 	}
 
+	double getFloorHeight(GameObject* main, double floorNumber) {
+		return main->getHeight() + FLOOR_HEIGHT * floorNumber;
+	}
 };

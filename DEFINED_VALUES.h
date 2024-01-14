@@ -15,6 +15,8 @@
 
 // 
 #define MAX_ELEMENTS 16
+#define MAX_BARRELS 8
+#define MAX_LEVEL 3
 
 // collider floor extension
 #define END_MODE 1
@@ -45,7 +47,7 @@
 #define ALLOW_FALL 0
 #define FORCE_FINISH 1
 #define FINISH_DIRECTION LEFT
-#define SPAWN_DELAY 2500 // in ms
+#define SPAWN_DELAY 2000 // in ms
 
 // identify axis
 #define X_AXIS 0
