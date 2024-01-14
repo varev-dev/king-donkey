@@ -65,6 +65,8 @@ GameObject* Collider::GetNearestFloor(GameObject* object[MAX_ELEMENTS], Movable*
 
 		return object[i];
 	}
+
+	return nullptr;
 }
 
 bool Collider::IsFloorExtended(GameObject* floors[MAX_ELEMENTS], GameObject* current, int mode) {
