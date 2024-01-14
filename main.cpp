@@ -41,10 +41,11 @@ int main(int argc, char **argv) {
 		return 1;
 	};
 	
+	// scale quality
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+	// render size
 	SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-
 	SDL_SetWindowTitle(window, "King Donkey");
 
 	screen = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32,
@@ -53,12 +54,12 @@ int main(int argc, char **argv) {
 	scrtex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
 	                           SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	// wy³¹czenie widocznoœci kursora myszy
 	SDL_ShowCursor(SDL_DISABLE);
 
 	srand(time(NULL));
 
 	Game *game = new Game(screen, scrtex, renderer);
+
 	// validate game init
 	if (game->init())
 		game->start();

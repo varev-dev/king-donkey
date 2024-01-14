@@ -30,7 +30,7 @@ public:
 	}
 
 	~GameObject() {
-		//sprite = nullptr;
+		sprite = nullptr;
 	}
 
 	// setters

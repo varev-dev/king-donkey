@@ -63,23 +63,24 @@ public:
 
 		while (!quit) {
 			workWithDelta();
-			SDL_FillRect(screen, NULL, black);
 
+			// render objects -> borders -> info
+			SDL_FillRect(screen, NULL, black);
 			printObjects();
 			printBorder();
 			printInformation();
-
 			sdl_refresh();
 
 			level->updateBarrels(gameTime);
 			level->setCurrentColliders(level->player);
 
+			// player input
 			SDL_PollEvent(&event);
 			handleEvents(event);
-
-			iterateBarrelsToHandleEvents();
-
 			movement();
+
+			//  barrel
+			iterateBarrelsToHandleEvents();
 
 			frames++;
 		}
@@ -152,7 +153,7 @@ private:
 
 	void sdl_refresh() {
 		SDL_UpdateTexture(scrtex, NULL, screen->pixels, screen->pitch);
-		// SDL_RenderClear(renderer); (?)
+		// SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, scrtex, NULL, NULL);
 		SDL_RenderPresent(renderer);
 	}
@@ -213,10 +214,15 @@ private:
 
 	// TO-DO anti ladder glitch
 	// TO-DO fall limited by ALLOW_FALL
-	// TO-DO 
+	// TO-DO fix switching floors
 	void barrelEvent(Movable* barrel) {
 		if (barrel->getFloor() != nullptr && barrel->getFloor()->getBeginningAxisY() != barrel->getEndAxisY()) {
 			barrel->setState(FALL_STATE);
+			return;
+		}
+
+		if (barrel->getEndAxisY() == level->floors[0]->getBeginningAxisY()) {
+			setBarrelDirectionOnX(barrel);
 			return;
 		}
 
@@ -228,9 +234,10 @@ private:
 		bool endOfFloor = 0, endOfLadder = 0;
 		int x_dir = barrel->getDirection(X_AXIS), y_dir = barrel->getDirection(Y_AXIS);
 
-		if (floorAvailable && barrel->getEndAxisY() == barrel->getFloor()->getBeginningAxisY())
-			endOfFloor = barrel->getBeginningAxisX() <= fmin(barrel->getFloor()->getBeginningAxisX(), GAME_BEG_X) || 
-						barrel->getEndAxisX() >= fmax(barrel->getFloor()->getEndAxisX(), GAME_END_X);
+		if (floorAvailable && barrel->getEndAxisY() == barrel->getFloor()->getBeginningAxisY()) {
+			endOfFloor = barrel->getBeginningAxisX() <= fmax(barrel->getFloor()->getBeginningAxisX(), GAME_BEG_X) ||
+				barrel->getEndAxisX() >= fmin(barrel->getFloor()->getEndAxisX(), GAME_END_X);
+		}
 
 		if (endOfFloor) {
 			if (ALLOW_FALL && random == 1) {
@@ -242,11 +249,9 @@ private:
 				return;
 			}
 		}
-		if (endOfFloor)
-			printf("%d", endOfFloor);
+
 		if (ladderAvailable)
-			endOfLadder = barrel->getEndAxisY() == barrel->getLadder()->getEndAxisY() || 
-			barrel->getEndAxisY() == barrel->getLadder()->getBeginningAxisY();
+			endOfLadder = barrel->getEndAxisY() == barrel->getLadder()->getBeginningAxisY();
 
 		if (endOfLadder)
 			barrel->setDirection(barrel->getDirection(Y_AXIS), RELEASED);

@@ -94,9 +94,9 @@ public:
 
 			double finalX = FINISH_DIRECTION == LEFT ? GAME_BEG_X : GAME_END_X - s_barrel->w;
 
-			if (barrels[i]->getBeginningAxisX() > GAME_BEG_X)
+			if (FINISH_DIRECTION == LEFT && barrels[i]->getBeginningAxisX() > 0)
 				continue;
-			if (barrels[i]->getEndAxisX() < GAME_END_X)
+			if (FINISH_DIRECTION == RIGHT && barrels[i]->getEndAxisX() < SCREEN_WIDTH)
 				continue;
 
 			removeBarrel(i);
