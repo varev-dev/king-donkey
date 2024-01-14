@@ -75,10 +75,11 @@ public:
 
 			// player input
 			SDL_PollEvent(&event);
-			handleEvents(event);
+			if (handleEvents(event))
+				continue;
 			movement();
 
-			//  barrel
+			// barrel
 			iterateBarrelsToHandleEvents();
 
 			frames++;
@@ -157,7 +158,7 @@ private:
 		SDL_RenderPresent(renderer);
 	}
 
-	void handleEvents(SDL_Event event) {
+	bool handleEvents(SDL_Event event) {
 		SDL_Keycode key = event.key.keysym.sym;
 		bool moveKey = (key == KEY_UP || key == KEY_DOWN || key == KEY_LEFT || key == KEY_RIGHT);
 		switch (event.type) {
@@ -167,6 +168,7 @@ private:
 			} else if (key == KEY_RESET) {
 				level->setUpLevel(1);
 				gameTime = 0;
+				return true;
 			} else if (moveKey && level->player->getState() == DEFAULT_STATE) {
 				level->player->setDirection(key, PRESSED);
 			} else if (key == KEY_JUMP && level->player->getState() == DEFAULT_STATE && level->player->getFloor() != nullptr) {
@@ -182,6 +184,7 @@ private:
 			quit = 1;
 			break;
 		}
+		return false;
 	}
 
 	void movement() {
