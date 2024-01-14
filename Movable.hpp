@@ -155,6 +155,14 @@ public:
 		}
 	}
 
+	void switchDirection(int axis) {
+		if (axis == X_AXIS) {
+			int direction = this->getDirection(X_AXIS);
+			this->setDirection(direction, RELEASED);
+			this->setDirection(direction == LEFT ? RIGHT : LEFT, PRESSED);
+		}
+	}
+
 	void setState(int state) {
 		this->state = state;
 
