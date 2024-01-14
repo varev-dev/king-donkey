@@ -74,7 +74,42 @@ public:
 		}
 	}
 
+	static bool IsFloorExtended(GameObject* floors[MAX_ELEMENTS], GameObject* current, int mode) {
+		for (int i = 0; i < MAX_ELEMENTS; i++) {
+			if (floors[i] == current || floors[i] == nullptr)
+				continue;
+
+			if (floors[i]->getBeginningAxisY() != current->getBeginningAxisY())
+				continue;
+
+			if (floors[i]->getBeginningAxisX() >= GAME_END_X)
+				continue;
+
+			if (floors[i]->getEndAxisX() <= GAME_BEG_X)
+				continue;
+
+			if (FloorExtension(current, floors[i], mode)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 private:
+	static bool FloorExtension(GameObject* current, GameObject* check, int mode) {
+		if (mode != END_MODE && mode != BEG_MODE)
+			return false;
+
+		if (mode == BEG_MODE && current->getBeginningAxisX() != check->getEndAxisX())
+			return false;
+
+		if (mode == END_MODE && current->getEndAxisX() != check->getBeginningAxisX())
+			return false;
+
+		return true;
+	}
+
 	static bool CollisionOnAxisX(GameObject go, Movable mv) {
 		if (go.getBeginningAxisX() > mv.getEndAxisX())
 			return false;

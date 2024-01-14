@@ -16,6 +16,10 @@
 // 
 #define MAX_ELEMENTS 16
 
+// collider floor extension
+#define END_MODE 1
+#define BEG_MODE 0
+
 #define SAND 0
 #define PLANKS 1
 #define ROTTEN 2
@@ -37,10 +41,11 @@
 
 // barrel config
 #define ALWAYS_DOWN 1
+#define ALLOW_CLIMB_DOWN 1
 #define ALLOW_FALL 0
 #define FORCE_FINISH 1
 #define FINISH_DIRECTION LEFT
-#define SPAWN_DELAY 3000 // in ms
+#define SPAWN_DELAY 2500 // in ms
 
 // identify axis
 #define X_AXIS 0
