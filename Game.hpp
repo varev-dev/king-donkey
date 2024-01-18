@@ -284,13 +284,13 @@ private:
 
 	void printInformation() {
 		char text[128];
-		sprintf(text, "Donkey Kong");
+		sprintf(text, "King Donkey");
 		SDL_Utils::DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 12, text, charset);
 		sprintf(text, "In game time: %.1lf s", gameTime);
 		SDL_Utils::DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 28, text, charset);
 		sprintf(text, " %.0lf fps", fps);
 		SDL_Utils::DrawString(screen, screen->w - strlen(text) * 8, 0, text, charset);
-		sprintf(text, "Author: S198020");
+		sprintf(text, "Author: varev-dev");
 		SDL_Utils::DrawString(screen, 0, 0, text, charset);
 	}
 
